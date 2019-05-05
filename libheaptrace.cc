@@ -30,6 +30,9 @@ static FreeFunction    real_free;
 static CallocFunction  real_calloc;
 static ReallocFunction real_realloc;
 
+// This flag is needed because printf internally calls malloc again.
+static bool hook_guard;
+
 __constructor
 static void heaptrace_init()
 {
@@ -48,16 +51,23 @@ __destructor
 static void heaptrace_fini()
 {
 	LOG("=== heaptrace fini ===\n");
+
+	// disable any other hooking after this.
+	hook_guard = true;
 }
 
 extern "C"
 void* malloc(size_t size)
 {
-	if (unlikely(!real_malloc))
+	if (unlikely(hook_guard || !real_malloc))
 		return __libc_malloc(size);
+
+	hook_guard = true;
 
 	void* p = real_malloc(size);
 	LOG("malloc(%zd) = %p\n", size, p);
+
+	hook_guard = false;
 
 	return p;
 }
@@ -65,23 +75,31 @@ void* malloc(size_t size)
 extern "C"
 void free(void *ptr)
 {
-	if (unlikely(!real_free)) {
+	if (unlikely(hook_guard || !real_free)) {
 		__libc_free(ptr);
 		return;
 	}
 
+	hook_guard = true;
+
 	LOG("free(%p)\n", ptr);
 	real_free(ptr);
+
+	hook_guard = false;
 }
 
 extern "C"
 void *calloc(size_t nmemb, size_t size)
 {
-	if (unlikely(!real_calloc))
+	if (unlikely(hook_guard || !real_calloc))
 		return __libc_calloc(nmemb, size);
+
+	hook_guard = true;
 
 	void* p = real_calloc(nmemb, size);
 	LOG("calloc(%zd, %zd) = %p\n", nmemb, size, p);
+
+	hook_guard = false;
 
 	return p;
 }
@@ -89,11 +107,15 @@ void *calloc(size_t nmemb, size_t size)
 extern "C"
 void *realloc(void *ptr, size_t size)
 {
-	if (unlikely(!real_realloc))
+	if (unlikely(hook_guard || !real_realloc))
 		return __libc_realloc(ptr, size);
+
+	hook_guard = true;
 
 	void* p = real_realloc(ptr, size);
 	LOG("realloc(%p, %zd) = %p\n", ptr, size, p);
+
+	hook_guard = false;
 
 	return p;
 }
