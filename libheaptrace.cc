@@ -10,9 +10,8 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
+#include "heaptrace.h"
 #include "compiler.h"
-
-#define LOG(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
 
 // dlsym internally uses calloc, so use weak symbol to get their symbol
 extern "C" __weak void* __libc_malloc(size_t size);
@@ -31,7 +30,7 @@ static CallocFunction  real_calloc;
 static ReallocFunction real_realloc;
 
 // This flag is needed because printf internally calls malloc again.
-static thread_local bool hook_guard;
+thread_local bool hook_guard;
 
 __constructor
 static void heaptrace_init()
