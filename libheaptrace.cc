@@ -9,10 +9,12 @@
 
 #include <unistd.h>
 #include <dlfcn.h>
+#include <signal.h>
 
 #include "heaptrace.h"
 #include "compiler.h"
 #include "stacktrace.h"
+#include "sighandler.h"
 
 // dlsym internally uses calloc, so use weak symbol to get their symbol
 extern "C" __weak void* __libc_malloc(size_t size);
@@ -36,6 +38,8 @@ thread_local bool hook_guard;
 __constructor
 static void heaptrace_init()
 {
+	struct sigaction sigusr1, sigusr2;
+
 	if (!real_malloc)
 		real_malloc = (MallocFunction)dlsym(RTLD_NEXT, "malloc");
 	if (!real_free)
@@ -44,6 +48,21 @@ static void heaptrace_init()
 		real_calloc = (CallocFunction)dlsym(RTLD_NEXT, "calloc");
 	if (!real_realloc)
 		real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
+
+	sigusr1.sa_handler = sigusr1_handler;
+	sigemptyset(&sigusr1.sa_mask);
+	sigusr1.sa_flags = 0;
+
+	sigusr2.sa_handler = sigusr2_handler;
+	sigemptyset(&sigusr2.sa_mask);
+	sigusr2.sa_flags = 0;
+
+	if (sigaction(SIGUSR1, &sigusr1, 0) == -1)
+		LOG("signal(SIGUSR1) error");
+
+	if (sigaction(SIGUSR2, &sigusr2, 0) == -1)
+		LOG("signal(SIGUSR2) error");
+
 	LOG("=== heaptrace init ===\n");
 }
 
