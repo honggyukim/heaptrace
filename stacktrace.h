@@ -49,4 +49,6 @@ inline void record_backtrace(size_t size, void* addr)
 
 void release_backtrace(void* addr);
 
+void dump_stackmap(void);
+
 #endif /* HEAPTRACE_STACKTRACE_H */

@@ -54,3 +54,49 @@ void release_backtrace(void* addr)
 	}
 }
 
+void dump_stackmap(void)
+{
+	size_t total_size = 0;
+	int cnt = 0;
+	char **strings;
+
+	hook_guard = true;
+
+	// sort the stack trace based on the count and then total_size
+	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
+	for (auto& p : stackmap)
+		sorted_stack.push_back(make_pair(p.first, p.second));
+	std::sort(sorted_stack.begin(), sorted_stack.end(),
+		[](std::pair<stack_trace_t, stack_info_t>& p1,
+		   std::pair<stack_trace_t, stack_info_t>& p2) {
+			if (p1.second.count == p2.second.count)
+				return p1.second.total_size > p2.second.total_size;
+			return p1.second.count > p2.second.count;
+	});
+
+	// print top 10 stack trace
+	for (int i = 0; i < NUM_TOP_BACKTRACE && i < sorted_stack.size(); i++) {
+		const stack_trace_t& stack_trace = sorted_stack[i].first;
+		const stack_info_t& info = sorted_stack[i].second;
+
+		LOG("stackmap %d allocated %zd bytes (%zd times) ===\n",
+		    cnt++, info.total_size, info.count);
+
+		// search symbols of backtrace info
+		strings = backtrace_symbols(stack_trace.data(), info.stack_depth);
+		if (strings == NULL) {
+			perror("backtrace_symbols");
+			exit(EXIT_FAILURE);
+		}
+		for (int i = 0; i < info.stack_depth; i++)
+			LOG("%p: %s\n", stack_trace[i], strings[i]);
+		LOG("\n");
+
+		total_size += info.total_size;
+	}
+
+	LOG("Total size allocated %zd in top %d of stack trace\n",
+	    total_size, cnt);
+
+	hook_guard = false;
+}

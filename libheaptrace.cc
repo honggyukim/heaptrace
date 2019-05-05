@@ -51,6 +51,7 @@ __destructor
 static void heaptrace_fini()
 {
 	LOG("=== heaptrace fini ===\n");
+	dump_stackmap();
 
 	// disable any other hooking after this.
 	hook_guard = true;
