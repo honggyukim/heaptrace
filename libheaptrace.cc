@@ -31,7 +31,7 @@ static CallocFunction  real_calloc;
 static ReallocFunction real_realloc;
 
 // This flag is needed because printf internally calls malloc again.
-static bool hook_guard;
+static thread_local bool hook_guard;
 
 __constructor
 static void heaptrace_init()
