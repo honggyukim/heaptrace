@@ -12,6 +12,7 @@
 
 #include "heaptrace.h"
 #include "compiler.h"
+#include "stacktrace.h"
 
 // dlsym internally uses calloc, so use weak symbol to get their symbol
 extern "C" __weak void* __libc_malloc(size_t size);
@@ -65,6 +66,7 @@ void* malloc(size_t size)
 
 	void* p = real_malloc(size);
 	LOG("malloc(%zd) = %p\n", size, p);
+	record_backtrace(size, p);
 
 	hook_guard = false;
 
@@ -82,6 +84,7 @@ void free(void *ptr)
 	hook_guard = true;
 
 	LOG("free(%p)\n", ptr);
+	release_backtrace(ptr);
 	real_free(ptr);
 
 	hook_guard = false;
@@ -97,6 +100,7 @@ void *calloc(size_t nmemb, size_t size)
 
 	void* p = real_calloc(nmemb, size);
 	LOG("calloc(%zd, %zd) = %p\n", nmemb, size, p);
+	record_backtrace(nmemb * size, p);
 
 	hook_guard = false;
 
@@ -113,6 +117,7 @@ void *realloc(void *ptr, size_t size)
 
 	void* p = real_realloc(ptr, size);
 	LOG("realloc(%p, %zd) = %p\n", ptr, size, p);
+	record_backtrace(size, p);
 
 	hook_guard = false;
 
