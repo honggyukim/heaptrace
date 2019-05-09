@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 
 #include <unistd.h>
 #include <dlfcn.h>
@@ -56,11 +57,16 @@ void release_backtrace(void* addr)
 
 void dump_stackmap(void)
 {
+	int alloc_size;
 	size_t total_size = 0;
 	int cnt = 0;
 	char **strings;
 
 	hook_guard = true;
+
+	// get allocated size info from the allocator
+	struct mallinfo info = mallinfo();
+	alloc_size = info.uordblks;
 
 	// sort the stack trace based on the count and then total_size
 	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
@@ -95,8 +101,9 @@ void dump_stackmap(void)
 		total_size += info.total_size;
 	}
 
-	LOG("Total size allocated %zd in top %d of stack trace\n",
-	    total_size, cnt);
+	LOG("Total size allocated %zd(%d) in top %d of stack trace\n",
+	    total_size, alloc_size, cnt);
+
 
 	hook_guard = false;
 }
