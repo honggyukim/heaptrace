@@ -7,4 +7,9 @@
 
 extern thread_local bool hook_guard;
 
+struct opts {
+	int idx;
+	char *exename;
+};
+
 #endif /* HEAPTRACE_HEAPTRACE_H */
