@@ -137,6 +137,7 @@ void *realloc(void *ptr, size_t size)
 
 	void* p = real_realloc(ptr, size);
 	LOG("realloc(%p, %zd) = %p\n", ptr, size, p);
+	release_backtrace(ptr);
 	record_backtrace(size, p);
 
 	hook_guard = false;
