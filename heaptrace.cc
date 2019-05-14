@@ -73,21 +73,26 @@ static void init_options(int argc, char *argv[])
 	argp_parse(&argp, argc, argv, ARGP_IN_ORDER, NULL, &opts);
 }
 
-int main(int argc, char *argv[])
+static void setup_child_environ(struct opts *opts, int argc, char *argv[])
 {
 	char buf[4096];
 	char *old_preload = getenv("LD_PRELOAD");
 	char *old_libpath = getenv("LD_LIBRARY_PATH");
 
-	init_options(argc, argv);
-
 	// ensure heaptrace gets called at first
 	snprintf(buf, sizeof(buf), "libheaptrace.so:%s", old_preload ?: "");
 	setenv("LD_PRELOAD", buf, 1);
+}
+
+int main(int argc, char *argv[])
+{
+	init_options(argc, argv);
 
 	// pass only non-heaptrace options to execv()
 	argc -= opts.idx;
 	argv += opts.idx;
+
+	setup_child_environ(&opts, argc, argv);
 
 	execv(opts.exename, argv);
 
