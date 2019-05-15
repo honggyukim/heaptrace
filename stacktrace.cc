@@ -81,9 +81,15 @@ void dump_stackmap(void)
 	});
 
 	// print top 10 stack trace
-	for (int i = 0; i < NUM_TOP_BACKTRACE && i < sorted_stack.size(); i++) {
-		const stack_trace_t& stack_trace = sorted_stack[i].first;
+	for (int i = 0; i < sorted_stack.size(); i++) {
 		const stack_info_t& info = sorted_stack[i].second;
+
+		total_size += info.total_size;
+
+		if (i >= NUM_TOP_BACKTRACE)
+			continue;
+
+		const stack_trace_t& stack_trace = sorted_stack[i].first;
 
 		pr_out("stackmap %d allocated %zd bytes (%zd times) ===\n",
 		    cnt++, info.total_size, info.count);
@@ -97,8 +103,6 @@ void dump_stackmap(void)
 		for (int i = 0; i < info.stack_depth; i++)
 			pr_out("%p: %s\n", stack_trace[i], strings[i]);
 		pr_out("\n");
-
-		total_size += info.total_size;
 	}
 
 	pr_out("Total size allocated %zd(%d) in top %d of stack trace\n",
