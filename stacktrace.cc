@@ -12,16 +12,22 @@
 #include <vector>
 #include <map>
 
+#include <mutex>
+
 #include "heaptrace.h"
 #include "stacktrace.h"
 
 std::map<stack_trace_t, stack_info_t> stackmap;
 std::map<addr_t, object_info_t> addrmap;
 
+std::mutex container_mutex;
+
 // record_backtrace() is defined in stacktrace.h as an inline function.
 void __record_backtrace(size_t size, void* addr,
 			       stack_trace_t& stack_trace, int nptrs)
 {
+	std::lock_guard<std::mutex> lock(container_mutex);
+
 	pr_dbg("  record_backtrace(%zd, %p)\n", size, addr);
 
 	struct stack_info_t& stack_info = stackmap[stack_trace];
@@ -36,6 +42,8 @@ void __record_backtrace(size_t size, void* addr,
 
 void release_backtrace(void* addr)
 {
+	std::lock_guard<std::mutex> lock(container_mutex);
+
 	pr_dbg("  release_backtrace(%p)\n", addr);
 
 	const auto& addrit = addrmap.find(addr);
@@ -74,8 +82,13 @@ void dump_stackmap(void)
 
 	// sort the stack trace based on the count and then total_size
 	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
-	for (auto& p : stackmap)
-		sorted_stack.push_back(make_pair(p.first, p.second));
+	{
+		// protect stackmap access
+		std::lock_guard<std::mutex> lock(container_mutex);
+
+		for (auto& p : stackmap)
+			sorted_stack.push_back(make_pair(p.first, p.second));
+	}
 	std::sort(sorted_stack.begin(), sorted_stack.end(),
 		[](std::pair<stack_trace_t, stack_info_t>& p1,
 		   std::pair<stack_trace_t, stack_info_t>& p2) {
@@ -111,7 +124,6 @@ void dump_stackmap(void)
 
 	pr_out("Total size allocated %zd(%d) in top %d of stack trace\n",
 		total_size, alloc_size, cnt);
-
 
 	hook_guard = false;
 }
