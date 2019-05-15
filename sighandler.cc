@@ -7,12 +7,12 @@
 
 void sigusr1_handler(int signo)
 {
-	LOG("\n=== sigusr1_handler(%d) ===\n", signo);
+	pr_dbg("\n=== sigusr1_handler(%d) ===\n", signo);
 	dump_stackmap();
 }
 
 void sigusr2_handler(int signo)
 {
-	LOG("\n=== sigusr2_handler(%d) ===\n", signo);
+	pr_dbg("\n=== sigusr2_handler(%d) ===\n", signo);
 	dump_stackmap();
 }

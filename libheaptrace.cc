@@ -58,18 +58,18 @@ static void heaptrace_init()
 	sigusr2.sa_flags = 0;
 
 	if (sigaction(SIGUSR1, &sigusr1, 0) == -1)
-		LOG("signal(SIGUSR1) error");
+		pr_dbg("signal(SIGUSR1) error");
 
 	if (sigaction(SIGUSR2, &sigusr2, 0) == -1)
-		LOG("signal(SIGUSR2) error");
+		pr_dbg("signal(SIGUSR2) error");
 
-	LOG("=== heaptrace init ===\n");
+	pr_dbg("=== heaptrace init ===\n");
 }
 
 __destructor
 static void heaptrace_fini()
 {
-	LOG("=== heaptrace fini ===\n");
+	pr_dbg("=== heaptrace fini ===\n");
 	dump_stackmap();
 
 	// disable any other hooking after this.
@@ -85,7 +85,7 @@ void* malloc(size_t size)
 	hook_guard = true;
 
 	void* p = real_malloc(size);
-	LOG("malloc(%zd) = %p\n", size, p);
+	pr_dbg("malloc(%zd) = %p\n", size, p);
 	record_backtrace(size, p);
 
 	hook_guard = false;
@@ -103,7 +103,7 @@ void free(void *ptr)
 
 	hook_guard = true;
 
-	LOG("free(%p)\n", ptr);
+	pr_dbg("free(%p)\n", ptr);
 	release_backtrace(ptr);
 	real_free(ptr);
 
@@ -119,7 +119,7 @@ void *calloc(size_t nmemb, size_t size)
 	hook_guard = true;
 
 	void* p = real_calloc(nmemb, size);
-	LOG("calloc(%zd, %zd) = %p\n", nmemb, size, p);
+	pr_dbg("calloc(%zd, %zd) = %p\n", nmemb, size, p);
 	record_backtrace(nmemb * size, p);
 
 	hook_guard = false;
@@ -136,7 +136,7 @@ void *realloc(void *ptr, size_t size)
 	hook_guard = true;
 
 	void* p = real_realloc(ptr, size);
-	LOG("realloc(%p, %zd) = %p\n", ptr, size, p);
+	pr_dbg("realloc(%p, %zd) = %p\n", ptr, size, p);
 	release_backtrace(ptr);
 	record_backtrace(size, p);
 

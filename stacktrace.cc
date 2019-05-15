@@ -18,7 +18,7 @@ std::map<addr_t, object_info_t> addrmap;
 void __record_backtrace(size_t size, void* addr,
 			       stack_trace_t& stack_trace, int nptrs)
 {
-	LOG("  record_backtrace(%zd, %p)\n", size, addr);
+	pr_dbg("  record_backtrace(%zd, %p)\n", size, addr);
 
 	struct stack_info_t& stack_info = stackmap[stack_trace];
 	stack_info.total_size += size;
@@ -32,7 +32,7 @@ void __record_backtrace(size_t size, void* addr,
 
 void release_backtrace(void* addr)
 {
-	LOG("  release_backtrace(%p)\n", addr);
+	pr_dbg("  release_backtrace(%p)\n", addr);
 
 	const auto& addrit = addrmap.find(addr);
 	if (addrit == addrmap.end())
@@ -85,7 +85,7 @@ void dump_stackmap(void)
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 		const stack_info_t& info = sorted_stack[i].second;
 
-		LOG("stackmap %d allocated %zd bytes (%zd times) ===\n",
+		pr_dbg("stackmap %d allocated %zd bytes (%zd times) ===\n",
 		    cnt++, info.total_size, info.count);
 
 		// search symbols of backtrace info
@@ -95,13 +95,13 @@ void dump_stackmap(void)
 			exit(EXIT_FAILURE);
 		}
 		for (int i = 0; i < info.stack_depth; i++)
-			LOG("%p: %s\n", stack_trace[i], strings[i]);
-		LOG("\n");
+			pr_dbg("%p: %s\n", stack_trace[i], strings[i]);
+		pr_dbg("\n");
 
 		total_size += info.total_size;
 	}
 
-	LOG("Total size allocated %zd(%d) in top %d of stack trace\n",
+	pr_dbg("Total size allocated %zd(%d) in top %d of stack trace\n",
 	    total_size, alloc_size, cnt);
 
 

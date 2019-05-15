@@ -3,7 +3,7 @@
 #ifndef HEAPTRACE_HEAPTRACE_H
 #define HEAPTRACE_HEAPTRACE_H
 
-#define LOG(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
+#define pr_dbg(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
 
 extern thread_local bool hook_guard;
 
