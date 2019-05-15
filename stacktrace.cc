@@ -97,12 +97,13 @@ void dump_stackmap(void)
 			return p1.second.count > p2.second.count;
 	});
 
-	// print top 10 stack trace
-	for (int i = 0; i < sorted_stack.size(); i++) {
+	size_t stack_size = sorted_stack.size();
+	for (int i = 0; i < stack_size; i++) {
 		const stack_info_t& info = sorted_stack[i].second;
 
 		total_size += info.total_size;
 
+		// print top 10 stack trace
 		if (i >= NUM_TOP_BACKTRACE)
 			continue;
 
@@ -122,8 +123,8 @@ void dump_stackmap(void)
 		pr_out("\n");
 	}
 
-	pr_out("Total size allocated %zd(%d) in top %d of stack trace\n",
-		total_size, alloc_size, cnt);
+	pr_out("Total size allocated %zd(%d) in top %d out of %zd stack trace\n",
+		total_size, alloc_size, cnt, stack_size);
 
 	hook_guard = false;
 }
