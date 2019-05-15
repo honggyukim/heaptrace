@@ -63,13 +63,13 @@ static void heaptrace_init()
 	if (sigaction(SIGUSR2, &sigusr2, 0) == -1)
 		pr_dbg("signal(SIGUSR2) error");
 
-	pr_dbg("=== heaptrace init ===\n");
+	pr_out("=== heaptrace init ===\n");
 }
 
 __destructor
 static void heaptrace_fini()
 {
-	pr_dbg("=== heaptrace fini ===\n");
+	pr_out("=== heaptrace fini ===\n");
 	dump_stackmap();
 
 	// disable any other hooking after this.

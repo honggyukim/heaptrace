@@ -85,7 +85,7 @@ void dump_stackmap(void)
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 		const stack_info_t& info = sorted_stack[i].second;
 
-		pr_dbg("stackmap %d allocated %zd bytes (%zd times) ===\n",
+		pr_out("stackmap %d allocated %zd bytes (%zd times) ===\n",
 		    cnt++, info.total_size, info.count);
 
 		// search symbols of backtrace info
@@ -95,14 +95,14 @@ void dump_stackmap(void)
 			exit(EXIT_FAILURE);
 		}
 		for (int i = 0; i < info.stack_depth; i++)
-			pr_dbg("%p: %s\n", stack_trace[i], strings[i]);
-		pr_dbg("\n");
+			pr_out("%p: %s\n", stack_trace[i], strings[i]);
+		pr_out("\n");
 
 		total_size += info.total_size;
 	}
 
-	pr_dbg("Total size allocated %zd(%d) in top %d of stack trace\n",
-	    total_size, alloc_size, cnt);
+	pr_out("Total size allocated %zd(%d) in top %d of stack trace\n",
+		total_size, alloc_size, cnt);
 
 
 	hook_guard = false;
