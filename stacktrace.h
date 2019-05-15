@@ -5,10 +5,7 @@
 
 #include <execinfo.h>
 
-#include <algorithm>
-#include <thread>
-#include <vector>
-#include <map>
+#include <array>
 
 #include "heaptrace.h"
 
