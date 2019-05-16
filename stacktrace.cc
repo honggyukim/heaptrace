@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 #include <dlfcn.h>
+#include <cxxabi.h>
 
 #include <algorithm>
 #include <vector>
@@ -16,6 +17,8 @@
 
 #include "heaptrace.h"
 #include "stacktrace.h"
+
+#define SYMBOL_MAXLEN 128
 
 std::map<stack_trace_t, stack_info_t> stackmap;
 std::map<addr_t, object_info_t> addrmap;
@@ -67,6 +70,46 @@ void release_backtrace(void* addr)
 	}
 }
 
+static void print_backtrace_symbol(int count, void *addr)
+{
+	Dl_info dlip;
+	char *symbol;
+	int offset;
+	int status;
+
+	// dladdr() translates address to symbolic info.
+	dladdr(addr, &dlip);
+
+#if __SIZEOF_LONG__ == 4
+	pr_out("%2d [%#10lx] ", count, (unsigned long)addr);
+#else
+	pr_out("%2d [%#14lx] ", count, (unsigned long)addr);
+#endif
+
+	symbol = abi::__cxa_demangle(dlip.dli_sname, 0, 0, &status);
+
+	if (status == -2 && !symbol)
+		symbol = strdup(dlip.dli_sname);
+
+	if (symbol) {
+		int len = SYMBOL_MAXLEN;
+
+		if (strlen(symbol) > len) {
+			symbol[len - 3] = '.';
+			symbol[len - 2] = '.';
+			symbol[len - 1] = '.';
+			symbol[len]     = '\0';
+		}
+		offset = static_cast<int>(static_cast<int*>(addr) -
+					  static_cast<int*>(dlip.dli_saddr));
+		pr_out("%s +%#x\n", symbol, offset);
+		free(symbol);
+	}
+	else {
+		pr_out("%s (+%p)\n", dlip.dli_fname, addr);
+	}
+}
+
 void dump_stackmap(void)
 {
 	int alloc_size;
@@ -112,18 +155,13 @@ void dump_stackmap(void)
 		pr_out("stackmap %d allocated %zd bytes (%zd times) ===\n",
 		    cnt++, info.total_size, info.count);
 
-		// search symbols of backtrace info
-		strings = backtrace_symbols(stack_trace.data(), info.stack_depth);
-		if (strings == NULL) {
-			perror("backtrace_symbols");
-			exit(EXIT_FAILURE);
-		}
 		for (int i = 0; i < info.stack_depth; i++)
-			pr_out("%p: %s\n", stack_trace[i], strings[i]);
+			print_backtrace_symbol(i, stack_trace[i]);
+
 		pr_out("\n");
 	}
 
-	pr_out("Total size allocated %zd(%d) in top %d out of %zd stack trace\n",
+	pr_out("Total size allocated %zd(%d) in top %d out of %zd stack trace\n\n",
 		total_size, alloc_size, cnt, stack_size);
 
 	hook_guard = false;
