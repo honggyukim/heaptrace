@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <limits.h>
 #include <inttypes.h>
+#include <sys/syscall.h>
 
 #include <unistd.h>
 #include <dlfcn.h>
@@ -165,6 +166,30 @@ static char *get_delta_time_unit(std::chrono::nanoseconds delta)
 	return str;
 }
 
+static void print_dump_header(void)
+{
+	char comm[32] = "";
+	char *proc_comm;
+	FILE *fp;
+	int tid;
+	int ret;
+
+	tid = syscall(SYS_gettid);
+	ret = asprintf(&proc_comm, "/proc/%d/comm", tid);
+
+	fp = fopen(proc_comm, "r");
+	if (fp)
+		ret = fscanf(fp, "%s", comm);
+
+	pr_out("\n=================================================================\n");
+	pr_out("    heaptrace of tid %d (%s)\n", tid, comm);
+	pr_out("=================================================================\n");
+
+	if (fp)
+		fclose(fp);
+	free(proc_comm);
+}
+
 void dump_stackmap(enum alloc_sort_order order)
 {
 	int alloc_size;
@@ -205,6 +230,8 @@ void dump_stackmap(enum alloc_sort_order order)
 				return p1.second.total_size > p2.second.total_size;
 			}
 	});
+
+	print_dump_header();
 
 	size_t stack_size = sorted_stack.size();
 	for (int i = 0; i < stack_size; i++) {
