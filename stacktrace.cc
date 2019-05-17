@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
+#include <limits.h>
+#include <inttypes.h>
 
 #include <unistd.h>
 #include <dlfcn.h>
@@ -120,18 +122,65 @@ static void print_backtrace_symbol(int count, void *addr)
 	}
 }
 
+static char *get_delta_time_unit(std::chrono::nanoseconds delta)
+{
+	char *str = nullptr;
+	int ret;
+
+	auto h = std::chrono::duration_cast<std::chrono::hours>(delta);
+	delta -= h;
+
+	auto mins = std::chrono::duration_cast<std::chrono::minutes>(delta);
+	delta -= mins;
+
+	auto secs = std::chrono::duration_cast<std::chrono::seconds>(delta);
+	delta -= secs;
+
+	auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(delta);
+	delta -= millis;
+
+	auto micros = std::chrono::duration_cast<std::chrono::microseconds>(delta);
+	delta -= micros;
+
+	auto nanos = delta;
+
+	if (h.count() > 0)
+		ret = asprintf(&str, "%" PRId64 " hours %" PRId64 " mins",
+				h.count(), mins.count());
+	else if (mins.count() > 0)
+		ret = asprintf(&str, "%" PRId64 " mins %" PRId64 " secs",
+				mins.count(), secs.count());
+	else if (secs.count() > 0)
+		ret = asprintf(&str, "%" PRId64 ".%" PRId64 " secs",
+				secs.count(), millis.count());
+	else if (millis.count() > 0)
+		ret = asprintf(&str, "%" PRId64 ".%" PRId64 " ms",
+				millis.count(), micros.count());
+	else if (micros.count() > 0)
+		ret = asprintf(&str, "%" PRId64 ".%" PRId64 " us",
+				micros.count(), nanos.count());
+	else
+		ret = asprintf(&str, "%" PRId64 " ns", nanos.count());
+
+	return str;
+}
+
 void dump_stackmap(void)
 {
 	int alloc_size;
 	size_t total_size = 0;
 	int cnt = 0;
 	char **strings;
+	time_point_t current;
 
 	hook_guard = true;
 
 	// get allocated size info from the allocator
 	struct mallinfo info = mallinfo();
 	alloc_size = info.uordblks;
+
+	// get current time
+	current = std::chrono::steady_clock::now();
 
 	// sort the stack trace based on the count and then total_size
 	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
@@ -161,10 +210,13 @@ void dump_stackmap(void)
 			continue;
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
+		char *age = get_delta_time_unit(current - info.birth_time);
 
-		pr_out("=== stackmap #%d === [count/max: %zd/%zd] [size/max: %zd/%zd]\n",
+		pr_out("=== stackmap #%d === [count/max: %zd/%zd] [size/max: %zd/%zd] [age: %s]\n",
 			cnt++, info.count, info.max_count,
-			info.total_size, info.max_total_size);
+			info.total_size, info.max_total_size, age);
+
+		free(age);
 
 		for (int i = 0; i < info.stack_depth; i++)
 			print_backtrace_symbol(i, stack_trace[i]);
