@@ -6,6 +6,7 @@
 #include <execinfo.h>
 
 #include <array>
+#include <chrono>
 
 #include "heaptrace.h"
 
@@ -14,11 +15,13 @@
 
 using stack_trace_t = std::array<void*, NUM_BACKTRACE>;
 using addr_t = void*;
+using time_point_t = std::chrono::steady_clock::time_point;
 
 struct stack_info_t {
 	size_t total_size;
 	size_t stack_depth;
 	size_t count;
+	time_point_t birth_time;
 };
 
 struct object_info_t {

@@ -33,6 +33,13 @@ void __record_backtrace(size_t size, void* addr,
 
 	pr_dbg("  record_backtrace(%zd, %p)\n", size, addr);
 
+	if (stackmap.find(stack_trace) == stackmap.end()) {
+		// Record the creation time for the stack_trace
+		struct stack_info_t stack_info = { 0 };
+		stack_info.birth_time = std::chrono::steady_clock::now();
+		stackmap[stack_trace] = stack_info;
+	}
+
 	struct stack_info_t& stack_info = stackmap[stack_trace];
 	stack_info.total_size += size;
 	stack_info.stack_depth = nptrs;
