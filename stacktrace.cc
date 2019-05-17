@@ -41,9 +41,12 @@ void __record_backtrace(size_t size, void* addr,
 	}
 
 	struct stack_info_t& stack_info = stackmap[stack_trace];
-	stack_info.total_size += size;
 	stack_info.stack_depth = nptrs;
+	stack_info.total_size += size;
+	stack_info.max_total_size = std::max(stack_info.max_total_size,
+					     stack_info.total_size);
 	stack_info.count++;
+	stack_info.max_count = std::max(stack_info.max_count, stack_info.count);
 
 	struct object_info_t& object_info = addrmap[addr];
 	object_info.stack_trace = stack_trace;
@@ -159,8 +162,9 @@ void dump_stackmap(void)
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 
-		pr_out("stackmap %d allocated %zd bytes (%zd times) ===\n",
-		    cnt++, info.total_size, info.count);
+		pr_out("=== stackmap #%d === [count/max: %zd/%zd] [size/max: %zd/%zd]\n",
+			cnt++, info.count, info.max_count,
+			info.total_size, info.max_total_size);
 
 		for (int i = 0; i < info.stack_depth; i++)
 			print_backtrace_symbol(i, stack_trace[i]);

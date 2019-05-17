@@ -18,9 +18,11 @@ using addr_t = void*;
 using time_point_t = std::chrono::steady_clock::time_point;
 
 struct stack_info_t {
-	size_t total_size;
 	size_t stack_depth;
+	size_t total_size;
+	size_t max_total_size;
 	size_t count;
+	size_t max_count;
 	time_point_t birth_time;
 };
 
