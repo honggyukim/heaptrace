@@ -165,7 +165,7 @@ static char *get_delta_time_unit(std::chrono::nanoseconds delta)
 	return str;
 }
 
-void dump_stackmap(void)
+void dump_stackmap(enum alloc_sort_order order)
 {
 	int alloc_size;
 	size_t total_size = 0;
@@ -192,11 +192,18 @@ void dump_stackmap(void)
 			sorted_stack.push_back(make_pair(p.first, p.second));
 	}
 	std::sort(sorted_stack.begin(), sorted_stack.end(),
-		[](std::pair<stack_trace_t, stack_info_t>& p1,
+		[order](std::pair<stack_trace_t, stack_info_t>& p1,
 		   std::pair<stack_trace_t, stack_info_t>& p2) {
-			if (p1.second.count == p2.second.count)
+			if (order == ALLOC_COUNT) {
+				if (p1.second.count == p2.second.count)
+					return p1.second.total_size > p2.second.total_size;
+				return p1.second.count > p2.second.count;
+			}
+			else if (order == ALLOC_SIZE) {
+				if (p1.second.total_size == p2.second.total_size)
+					return p1.second.count > p2.second.count;
 				return p1.second.total_size > p2.second.total_size;
-			return p1.second.count > p2.second.count;
+			}
 	});
 
 	size_t stack_size = sorted_stack.size();

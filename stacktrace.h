@@ -31,6 +31,12 @@ struct object_info_t {
 	size_t size;
 };
 
+enum alloc_sort_order {
+	ALLOC_COUNT,
+	ALLOC_SIZE,
+	ALLOC_AGE,
+};
+
 void __record_backtrace(size_t size, void* addr,
 			stack_trace_t& stack_trace, int nptrs);
 
@@ -51,6 +57,6 @@ inline void record_backtrace(size_t size, void* addr)
 
 void release_backtrace(void* addr);
 
-void dump_stackmap(void);
+void dump_stackmap(enum alloc_sort_order order);
 
 #endif /* HEAPTRACE_STACKTRACE_H */

@@ -70,7 +70,7 @@ __destructor
 static void heaptrace_fini()
 {
 	pr_out("=== heaptrace fini ===\n");
-	dump_stackmap();
+	dump_stackmap(ALLOC_SIZE);
 
 	// disable any other hooking after this.
 	hook_guard = true;
