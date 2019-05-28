@@ -11,7 +11,11 @@
 
 #define pr_out(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
 
-extern thread_local bool hook_guard;
+struct thread_flags_t {
+	// to protect unexpected recursive malloc calls
+	bool hook_guard;
+};
+extern thread_local struct thread_flags_t thread_flags;
 
 struct opts {
 	int idx;

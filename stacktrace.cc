@@ -192,13 +192,14 @@ static void print_dump_header(void)
 
 void dump_stackmap(enum alloc_sort_order order)
 {
+	auto* tfs = &thread_flags;
 	int alloc_size;
 	size_t total_size = 0;
 	int cnt = 0;
 	char **strings;
 	time_point_t current;
 
-	hook_guard = true;
+	tfs->hook_guard = true;
 
 	// get allocated size info from the allocator
 	struct mallinfo info = mallinfo();
@@ -261,5 +262,5 @@ void dump_stackmap(enum alloc_sort_order order)
 	pr_out("Total size allocated %zd(%d) in top %d out of %zd stack trace\n\n",
 		total_size, alloc_size, cnt, stack_size);
 
-	hook_guard = false;
+	tfs->hook_guard = false;
 }

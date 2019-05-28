@@ -32,8 +32,7 @@ static FreeFunction    real_free;
 static CallocFunction  real_calloc;
 static ReallocFunction real_realloc;
 
-// This flag is needed because printf internally calls malloc again.
-thread_local bool hook_guard;
+thread_local struct thread_flags_t thread_flags;
 
 __constructor
 static void heaptrace_init()
@@ -69,26 +68,30 @@ static void heaptrace_init()
 __destructor
 static void heaptrace_fini()
 {
+	auto* tfs = &thread_flags;
+
 	pr_out("=== heaptrace fini ===\n");
 	dump_stackmap(ALLOC_SIZE);
 
 	// disable any other hooking after this.
-	hook_guard = true;
+	tfs->hook_guard = true;
 }
 
 extern "C"
 void* malloc(size_t size)
 {
-	if (unlikely(hook_guard || !real_malloc))
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !real_malloc))
 		return __libc_malloc(size);
 
-	hook_guard = true;
+	tfs->hook_guard = true;
 
 	void* p = real_malloc(size);
 	pr_dbg("malloc(%zd) = %p\n", size, p);
 	record_backtrace(size, p);
 
-	hook_guard = false;
+	tfs->hook_guard = false;
 
 	return p;
 }
@@ -96,33 +99,37 @@ void* malloc(size_t size)
 extern "C"
 void free(void *ptr)
 {
-	if (unlikely(hook_guard || !real_free)) {
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !real_free)) {
 		__libc_free(ptr);
 		return;
 	}
 
-	hook_guard = true;
+	tfs->hook_guard = true;
 
 	pr_dbg("free(%p)\n", ptr);
 	release_backtrace(ptr);
 	real_free(ptr);
 
-	hook_guard = false;
+	tfs->hook_guard = false;
 }
 
 extern "C"
 void *calloc(size_t nmemb, size_t size)
 {
-	if (unlikely(hook_guard || !real_calloc))
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !real_calloc))
 		return __libc_calloc(nmemb, size);
 
-	hook_guard = true;
+	tfs->hook_guard = true;
 
 	void* p = real_calloc(nmemb, size);
 	pr_dbg("calloc(%zd, %zd) = %p\n", nmemb, size, p);
 	record_backtrace(nmemb * size, p);
 
-	hook_guard = false;
+	tfs->hook_guard = false;
 
 	return p;
 }
@@ -130,17 +137,19 @@ void *calloc(size_t nmemb, size_t size)
 extern "C"
 void *realloc(void *ptr, size_t size)
 {
-	if (unlikely(hook_guard || !real_realloc))
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !real_realloc))
 		return __libc_realloc(ptr, size);
 
-	hook_guard = true;
+	tfs->hook_guard = true;
 
 	void* p = real_realloc(ptr, size);
 	pr_dbg("realloc(%p, %zd) = %p\n", ptr, size, p);
 	release_backtrace(ptr);
 	record_backtrace(size, p);
 
-	hook_guard = false;
+	tfs->hook_guard = false;
 
 	return p;
 }
