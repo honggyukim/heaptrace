@@ -37,16 +37,13 @@ thread_local struct thread_flags_t thread_flags;
 __constructor
 static void heaptrace_init()
 {
+	auto* tfs = &thread_flags;
 	struct sigaction sigusr1, sigusr2;
 
-	if (!real_malloc)
-		real_malloc = (MallocFunction)dlsym(RTLD_NEXT, "malloc");
-	if (!real_free)
-		real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
-	if (!real_calloc)
-		real_calloc = (CallocFunction)dlsym(RTLD_NEXT, "calloc");
-	if (!real_realloc)
-		real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
+	real_malloc = (MallocFunction)dlsym(RTLD_NEXT, "malloc");
+	real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
+	real_calloc = (CallocFunction)dlsym(RTLD_NEXT, "calloc");
+	real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
 
 	sigusr1.sa_handler = sigusr1_handler;
 	sigemptyset(&sigusr1.sa_mask);
@@ -63,6 +60,8 @@ static void heaptrace_init()
 		pr_dbg("signal(SIGUSR2) error");
 
 	pr_out("=== heaptrace init ===\n");
+
+	tfs->initialized = true;
 }
 
 __destructor
@@ -82,7 +81,7 @@ void* malloc(size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !real_malloc))
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
 		return __libc_malloc(size);
 
 	tfs->hook_guard = true;
@@ -101,7 +100,7 @@ void free(void *ptr)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !real_free)) {
+	if (unlikely(tfs->hook_guard || !tfs->initialized)) {
 		__libc_free(ptr);
 		return;
 	}
@@ -120,7 +119,7 @@ void *calloc(size_t nmemb, size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !real_calloc))
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
 		return __libc_calloc(nmemb, size);
 
 	tfs->hook_guard = true;
@@ -139,7 +138,7 @@ void *realloc(void *ptr, size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !real_realloc))
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
 		return __libc_realloc(ptr, size);
 
 	tfs->hook_guard = true;
