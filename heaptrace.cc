@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
 	setup_child_environ(&opts, argc, argv);
 
 	execv(opts.exename, argv);
+	perror(opts.exename);
 
-	return 0;
+	return -1;
 }
