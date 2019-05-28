@@ -21,16 +21,19 @@ extern "C" __weak void* __libc_malloc(size_t size);
 extern "C" __weak void  __libc_free(void* ptr);
 extern "C" __weak void* __libc_calloc(size_t nmemb, size_t size);
 extern "C" __weak void* __libc_realloc(void *ptr, size_t size);
+extern "C" __weak int   __posix_memalign(void **memptr, size_t alignment, size_t size);
 
 typedef void* (*MallocFunction)(size_t size);
 typedef void  (*FreeFunction)(void *ptr);
 typedef void* (*CallocFunction)(size_t nmemb, size_t size);
 typedef void* (*ReallocFunction)(void *ptr, size_t size);
+typedef int   (*PosixMemalignFunction)(void **memptr, size_t alignment, size_t size);
 
-static MallocFunction  real_malloc;
-static FreeFunction    real_free;
-static CallocFunction  real_calloc;
-static ReallocFunction real_realloc;
+static MallocFunction        real_malloc;
+static FreeFunction          real_free;
+static CallocFunction        real_calloc;
+static ReallocFunction       real_realloc;
+static PosixMemalignFunction real_posix_memalign;
 
 thread_local struct thread_flags_t thread_flags;
 
@@ -44,6 +47,7 @@ static void heaptrace_init()
 	real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
 	real_calloc = (CallocFunction)dlsym(RTLD_NEXT, "calloc");
 	real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
+	real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
 
 	sigusr1.sa_handler = sigusr1_handler;
 	sigemptyset(&sigusr1.sa_mask);
@@ -151,4 +155,24 @@ void *realloc(void *ptr, size_t size)
 	tfs->hook_guard = false;
 
 	return p;
+}
+
+extern "C"
+int posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+	auto *tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
+		return __posix_memalign(memptr, alignment, size);
+
+	tfs->hook_guard = true;
+
+	int ret = real_posix_memalign(memptr, alignment, size);
+	pr_dbg("posix_memalign(%p, %zd, %zd) = %d\n", memptr, alignment, size, ret);
+	if (ret == 0)
+		record_backtrace(size, *memptr);
+
+	tfs->hook_guard = false;
+
+	return ret;
 }
