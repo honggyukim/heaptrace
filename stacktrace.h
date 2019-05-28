@@ -11,7 +11,8 @@
 #include "heaptrace.h"
 
 #define NUM_BACKTRACE     8
-#define NUM_TOP_BACKTRACE 10
+
+extern struct opts opts;
 
 using stack_trace_t = std::array<void*, NUM_BACKTRACE>;
 using addr_t = void*;

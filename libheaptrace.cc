@@ -37,6 +37,8 @@ static PosixMemalignFunction real_posix_memalign;
 
 thread_local struct thread_flags_t thread_flags;
 
+struct opts opts;
+
 __constructor
 static void heaptrace_init()
 {
@@ -62,6 +64,9 @@ static void heaptrace_init()
 
 	if (sigaction(SIGUSR2, &sigusr2, 0) == -1)
 		pr_dbg("signal(SIGUSR2) error");
+
+	// setup option values
+	opts.top = strtol(getenv("HEAPTRACE_NUM_TOP_BACKTRACE"), NULL, 0);
 
 	pr_out("=== heaptrace init ===\n");
 

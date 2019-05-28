@@ -240,8 +240,7 @@ void dump_stackmap(enum alloc_sort_order order)
 
 		total_size += info.total_size;
 
-		// print top 10 stack trace
-		if (i >= NUM_TOP_BACKTRACE)
+		if (i >= opts.top)
 			continue;
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;

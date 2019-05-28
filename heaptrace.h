@@ -23,6 +23,8 @@ extern thread_local struct thread_flags_t thread_flags;
 struct opts {
 	int idx;
 	char *exename;
+
+	int top;
 };
 
 #endif /* HEAPTRACE_HEAPTRACE_H */
