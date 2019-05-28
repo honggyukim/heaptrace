@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include <argp.h>
 
+#include <string>
+#include <sstream>
+
 #include "heaptrace.h"
 
 #define HEAPTRACE_VERSION "v0.01"
@@ -87,13 +90,19 @@ static void init_options(int argc, char *argv[])
 
 static void setup_child_environ(struct opts *opts, int argc, char *argv[])
 {
+	std::stringstream ss;
 	char buf[4096];
 	char *old_preload = getenv("LD_PRELOAD");
 	char *old_libpath = getenv("LD_LIBRARY_PATH");
 
+	if (!access("libheaptrace.so", X_OK))
+		ss << "./";
+	ss << "libheaptrace.so";
+	if (old_preload)
+		ss << ":" << old_preload;
+
 	// ensure heaptrace gets called at first
-	snprintf(buf, sizeof(buf), "libheaptrace.so:%s", old_preload ?: "");
-	setenv("LD_PRELOAD", buf, 1);
+	setenv("LD_PRELOAD", ss.str().c_str(), 1);
 
 	// ----- additional option processing -----
 
