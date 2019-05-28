@@ -199,6 +199,11 @@ void dump_stackmap(enum alloc_sort_order order)
 	char **strings;
 	time_point_t current;
 
+	if (stackmap.empty()) {
+		pr_out("\n");
+		return;
+	}
+
 	tfs->hook_guard = true;
 
 	// get allocated size info from the allocator
