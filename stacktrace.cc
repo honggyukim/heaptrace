@@ -247,7 +247,7 @@ void dump_stackmap(enum alloc_sort_order order)
 		char *age = get_delta_time_unit(current - info.birth_time);
 
 		pr_out("=== stackmap #%d === [count/max: %zd/%zd] [size/max: %zd/%zd] [age: %s]\n",
-			cnt++, info.count, info.max_count,
+			++cnt, info.count, info.max_count,
 			info.total_size, info.max_total_size, age);
 
 		free(age);
