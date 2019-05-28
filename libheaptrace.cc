@@ -68,7 +68,7 @@ static void heaptrace_init()
 	// setup option values
 	opts.top = strtol(getenv("HEAPTRACE_NUM_TOP_BACKTRACE"), NULL, 0);
 
-	pr_out("=== heaptrace init ===\n");
+	pr_out("\n== pid: %5d == heaptrace initialized for a new memory map\n", getpid());
 
 	tfs->initialized = true;
 }
@@ -78,7 +78,7 @@ static void heaptrace_fini()
 {
 	auto* tfs = &thread_flags;
 
-	pr_out("=== heaptrace fini ===\n");
+	pr_out("\n== pid: %5d == heaptrace finalized\n", getpid());
 	dump_stackmap(ALLOC_SIZE);
 
 	// disable any other hooking after this.
