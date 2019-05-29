@@ -124,9 +124,9 @@ static void print_backtrace_symbol(int count, void *addr)
 	}
 }
 
-static char *get_delta_time_unit(std::chrono::nanoseconds delta)
+static fmt_string get_delta_time_unit(std::chrono::nanoseconds delta)
 {
-	char *str = nullptr;
+	fmt_string str;
 	int ret;
 
 	auto h = std::chrono::duration_cast<std::chrono::hours>(delta);
@@ -147,45 +147,35 @@ static char *get_delta_time_unit(std::chrono::nanoseconds delta)
 	auto nanos = delta;
 
 	if (h.count() > 0)
-		ret = asprintf(&str, "%" PRId64 " hours %" PRId64 " mins",
-				h.count(), mins.count());
+		str.fmtset("%" PRId64 " hours %" PRId64 " mins", h.count(), mins.count());
 	else if (mins.count() > 0)
-		ret = asprintf(&str, "%" PRId64 " mins %" PRId64 " secs",
-				mins.count(), secs.count());
+		str.fmtset("%" PRId64 " mins %" PRId64 " secs", mins.count(), secs.count());
 	else if (secs.count() > 0)
-		ret = asprintf(&str, "%" PRId64 ".%" PRId64 " secs",
-				secs.count(), millis.count());
+		str.fmtset("%" PRId64 ".%" PRId64 " secs", secs.count(), millis.count());
 	else if (millis.count() > 0)
-		ret = asprintf(&str, "%" PRId64 ".%" PRId64 " ms",
-				millis.count(), micros.count());
+		str.fmtset("%" PRId64 ".%" PRId64 " ms", millis.count(), micros.count());
 	else if (micros.count() > 0)
-		ret = asprintf(&str, "%" PRId64 ".%" PRId64 " us",
-				micros.count(), nanos.count());
+		str.fmtset("%" PRId64 ".%" PRId64 " us", micros.count(), nanos.count());
 	else
-		ret = asprintf(&str, "%" PRId64 " ns", nanos.count());
+		str.fmtset("%" PRId64 " ns", nanos.count());
 
 	return str;
 }
 
 static void print_dump_header(void)
 {
-	char comm[32] = "";
-	char *proc_comm;
-	int tid;
 	int ret;
+	int tid = syscall(SYS_gettid);
+	fmt_string file_comm("/proc/%d/comm", tid);
+	fmt_string comm(32);
 
-	tid = syscall(SYS_gettid);
-	ret = asprintf(&proc_comm, "/proc/%d/comm", tid);
-
-	file_t file(proc_comm);
+	file_t file(file_comm);
 	if (file)
-		ret = fscanf(file, "%s", comm);
+		ret = fscanf(file, "%s", comm.data());
 
 	pr_out("\n=================================================================\n");
-	pr_out("    heaptrace of tid %d (%s)\n", tid, comm);
+	pr_out("    heaptrace of tid %d (%s)\n", tid, comm.get());
 	pr_out("=================================================================\n");
-
-	free(proc_comm);
 }
 
 void dump_stackmap(enum alloc_sort_order order)
@@ -194,7 +184,6 @@ void dump_stackmap(enum alloc_sort_order order)
 	int alloc_size;
 	size_t total_size = 0;
 	int cnt = 0;
-	char **strings;
 	time_point_t current;
 
 	if (stackmap.empty()) {
@@ -247,13 +236,11 @@ void dump_stackmap(enum alloc_sort_order order)
 			continue;
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
-		char *age = get_delta_time_unit(current - info.birth_time);
+		fmt_string age = get_delta_time_unit(current - info.birth_time);
 
 		pr_out("=== stackmap #%d === [count/max: %zd/%zd] [size/max: %zd/%zd] [age: %s]\n",
 			++cnt, info.count, info.max_count,
-			info.total_size, info.max_total_size, age);
-
-		free(age);
+			info.total_size, info.max_total_size, age.get());
 
 		for (int i = 0; i < info.stack_depth; i++)
 			print_backtrace_symbol(i, stack_trace[i]);
