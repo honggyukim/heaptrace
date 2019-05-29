@@ -47,10 +47,10 @@ void __record_backtrace(size_t size, void* addr,
 	struct stack_info_t& stack_info = stackmap[stack_trace];
 	stack_info.stack_depth = nptrs;
 	stack_info.total_size += size;
-	stack_info.max_total_size = std::max(stack_info.max_total_size,
+	stack_info.peak_total_size = std::max(stack_info.peak_total_size,
 					     stack_info.total_size);
 	stack_info.count++;
-	stack_info.max_count = std::max(stack_info.max_count, stack_info.count);
+	stack_info.peak_count = std::max(stack_info.peak_count, stack_info.count);
 
 	struct object_info_t& object_info = addrmap[addr];
 	object_info.stack_trace = stack_trace;
@@ -238,10 +238,10 @@ void dump_stackmap(enum alloc_sort_order order)
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 		fmt_string age = get_delta_time_unit(current - info.birth_time);
 
-		pr_out("=== stackmap #%d === [count/max: %zd/%zd] "
-		       "[size/max: %" PRIu64 "/%" PRIu64 "] [age: %s]\n",
-			++cnt, info.count, info.max_count,
-			info.total_size, info.max_total_size, age.get());
+		pr_out("=== stackmap #%d === [count/peak: %zd/%zd] "
+		       "[size/peak: %" PRIu64 "/%" PRIu64 "] [age: %s]\n",
+			++cnt, info.count, info.peak_count,
+			info.total_size, info.peak_total_size, age.get());
 
 		for (int i = 0; i < info.stack_depth; i++)
 			print_backtrace_symbol(i, stack_trace[i]);

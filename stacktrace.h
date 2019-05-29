@@ -22,9 +22,9 @@ using time_point_t = std::chrono::steady_clock::time_point;
 struct stack_info_t {
 	size_t stack_depth;
 	uint64_t total_size;
-	uint64_t max_total_size;
+	uint64_t peak_total_size;
 	size_t count;
-	size_t max_count;
+	size_t peak_count;
 	time_point_t birth_time;
 };
 
