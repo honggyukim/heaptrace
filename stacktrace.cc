@@ -182,7 +182,7 @@ void dump_stackmap(enum alloc_sort_order order)
 {
 	auto* tfs = &thread_flags;
 	int alloc_size;
-	size_t total_size = 0;
+	uint64_t total_size = 0;
 	int cnt = 0;
 	time_point_t current;
 
@@ -238,7 +238,8 @@ void dump_stackmap(enum alloc_sort_order order)
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 		fmt_string age = get_delta_time_unit(current - info.birth_time);
 
-		pr_out("=== stackmap #%d === [count/max: %zd/%zd] [size/max: %zd/%zd] [age: %s]\n",
+		pr_out("=== stackmap #%d === [count/max: %zd/%zd] "
+		       "[size/max: %" PRIu64 "/%" PRIu64 "] [age: %s]\n",
 			++cnt, info.count, info.max_count,
 			info.total_size, info.max_total_size, age.get());
 
@@ -248,7 +249,7 @@ void dump_stackmap(enum alloc_sort_order order)
 		pr_out("\n");
 	}
 
-	pr_out("Total size allocated %zd(%d) in top %d out of %zd stack trace\n\n",
+	pr_out("Total size allocated %" PRIu64 "(%d) in top %d out of %zd stack trace\n\n",
 		total_size, alloc_size, cnt, stack_size);
 
 	tfs->hook_guard = false;

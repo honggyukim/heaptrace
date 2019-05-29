@@ -4,6 +4,7 @@
 #define HEAPTRACE_STACKTRACE_H
 
 #include <execinfo.h>
+#include <stdint.h>
 
 #include <array>
 #include <chrono>
@@ -20,8 +21,8 @@ using time_point_t = std::chrono::steady_clock::time_point;
 
 struct stack_info_t {
 	size_t stack_depth;
-	size_t total_size;
-	size_t max_total_size;
+	uint64_t total_size;
+	uint64_t max_total_size;
 	size_t count;
 	size_t max_count;
 	time_point_t birth_time;
@@ -29,7 +30,7 @@ struct stack_info_t {
 
 struct object_info_t {
 	stack_trace_t stack_trace;
-	size_t size;
+	uint64_t size;
 };
 
 enum alloc_sort_order {
