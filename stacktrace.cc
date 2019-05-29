@@ -20,6 +20,7 @@
 
 #include "heaptrace.h"
 #include "stacktrace.h"
+#include "utils.h"
 
 #define SYMBOL_MAXLEN 128
 
@@ -170,23 +171,20 @@ static void print_dump_header(void)
 {
 	char comm[32] = "";
 	char *proc_comm;
-	FILE *fp;
 	int tid;
 	int ret;
 
 	tid = syscall(SYS_gettid);
 	ret = asprintf(&proc_comm, "/proc/%d/comm", tid);
 
-	fp = fopen(proc_comm, "r");
-	if (fp)
-		ret = fscanf(fp, "%s", comm);
+	file_t file(proc_comm);
+	if (file)
+		ret = fscanf(file, "%s", comm);
 
 	pr_out("\n=================================================================\n");
 	pr_out("    heaptrace of tid %d (%s)\n", tid, comm);
 	pr_out("=================================================================\n");
 
-	if (fp)
-		fclose(fp);
 	free(proc_comm);
 }
 
