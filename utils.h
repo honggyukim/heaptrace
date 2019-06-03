@@ -7,8 +7,14 @@
 #include <cstdarg>
 
 #include <string>
+#include <chrono>
 
 namespace utils {
+
+typedef std::chrono::duration<uint64_t>             bytes;
+typedef std::chrono::duration<uint64_t, std::kilo>  kilobytes;
+typedef std::chrono::duration<uint64_t, std::mega>  megabytes;
+typedef std::chrono::duration<uint64_t, std::giga>  gigabytes;
 
 class file_t {
 public:
