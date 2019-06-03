@@ -162,6 +162,31 @@ static utils::fmt_string get_delta_time_unit(std::chrono::nanoseconds delta)
 	return str;
 }
 
+static utils::fmt_string get_byte_unit(uint64_t size)
+{
+	utils::fmt_string str;
+	int ret;
+
+	utils::bytes sz(size);
+
+	auto mb = std::chrono::duration_cast<utils::megabytes>(sz);
+	sz -= mb;
+
+	auto kb = std::chrono::duration_cast<utils::kilobytes>(sz);
+	sz -= kb;
+
+	auto b = sz;
+
+	if (mb.count() > 0)
+		str.fmtset("%" PRId64 ".%" PRId64 " MB", mb.count(), kb.count());
+	else if (kb.count() > 0)
+		str.fmtset("%" PRId64 ".%" PRId64 " KB", kb.count(), b.count());
+	else
+		str.fmtset("%" PRId64 " bytes", b.count());
+
+	return str;
+}
+
 static void print_dump_header(void)
 {
 	int ret;
