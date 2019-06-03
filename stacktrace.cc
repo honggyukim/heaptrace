@@ -124,9 +124,9 @@ static void print_backtrace_symbol(int count, void *addr)
 	}
 }
 
-static fmt_string get_delta_time_unit(std::chrono::nanoseconds delta)
+static utils::fmt_string get_delta_time_unit(std::chrono::nanoseconds delta)
 {
-	fmt_string str;
+	utils::fmt_string str;
 	int ret;
 
 	auto h = std::chrono::duration_cast<std::chrono::hours>(delta);
@@ -166,10 +166,10 @@ static void print_dump_header(void)
 {
 	int ret;
 	int tid = syscall(SYS_gettid);
-	fmt_string file_comm("/proc/%d/comm", tid);
-	fmt_string comm(32);
+	utils::fmt_string file_comm("/proc/%d/comm", tid);
+	utils::fmt_string comm(32);
 
-	file_t file(file_comm);
+	utils::file_t file(file_comm);
 	if (file)
 		ret = fscanf(file, "%s", comm.data());
 
@@ -236,7 +236,7 @@ void dump_stackmap(enum alloc_sort_order order)
 			continue;
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
-		fmt_string age = get_delta_time_unit(current - info.birth_time);
+		utils::fmt_string age = get_delta_time_unit(current - info.birth_time);
 
 		pr_out("=== stackmap #%d === [count/peak: %zd/%zd] "
 		       "[size/peak: %" PRIu64 "/%" PRIu64 "] [age: %s]\n",

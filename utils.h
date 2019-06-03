@@ -8,6 +8,8 @@
 
 #include <string>
 
+namespace utils {
+
 class file_t {
 public:
 	explicit file_t(const char* filename, const char* mode = "r") {
@@ -81,5 +83,7 @@ public:
 private:
 	std::string str;
 };
+
+} // namespace utils
 
 #endif /* HEAPTRACE_UTILS_H */
