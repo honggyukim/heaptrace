@@ -6,7 +6,6 @@
 #include <malloc.h>
 #include <limits.h>
 #include <inttypes.h>
-#include <sys/syscall.h>
 
 #include <unistd.h>
 #include <dlfcn.h>
@@ -190,7 +189,7 @@ static utils::fmt_string get_byte_unit(uint64_t size)
 static void print_dump_header(void)
 {
 	int ret;
-	int tid = syscall(SYS_gettid);
+	int tid = utils::gettid();
 	utils::fmt_string file_comm("/proc/%d/comm", tid);
 	utils::fmt_string comm(32);
 

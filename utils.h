@@ -5,6 +5,7 @@
 
 #include <cstdio>
 #include <cstdarg>
+#include <sys/syscall.h>
 
 #include <string>
 #include <chrono>
@@ -15,6 +16,11 @@ typedef std::chrono::duration<uint64_t>             bytes;
 typedef std::chrono::duration<uint64_t, std::kilo>  kilobytes;
 typedef std::chrono::duration<uint64_t, std::mega>  megabytes;
 typedef std::chrono::duration<uint64_t, std::giga>  gigabytes;
+
+static int gettid(void)
+{
+	return syscall(SYS_gettid);
+}
 
 class file_t {
 public:
