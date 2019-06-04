@@ -159,7 +159,7 @@ static std::string get_delta_time_unit(std::chrono::nanoseconds delta)
 	else
 		str = utils::asprintf("%" PRId64 " ns", nanos.count());
 
-	return str;
+	return std::move(str);
 }
 
 static std::string get_byte_unit(uint64_t size)
@@ -184,7 +184,7 @@ static std::string get_byte_unit(uint64_t size)
 	else
 		str = utils::asprintf("%" PRId64 " bytes", b.count());
 
-	return str;
+	return std::move(str);
 }
 
 std::string read_statm() {
@@ -200,7 +200,7 @@ std::string read_statm() {
 	std::string str = get_byte_unit(vss) + " / "
 			+ get_byte_unit(rss) + " / "
 			+ get_byte_unit(shared);
-	return str;
+	return std::move(str);
 }
 
 static void print_dump_header(void)
