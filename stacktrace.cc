@@ -289,7 +289,7 @@ void dump_stackmap(enum alloc_sort_order order)
 		pr_out("\n");
 	}
 
-	pr_out("[heaptrace] heap traced allocation count : %zd times\n",
+	pr_out("[heaptrace] heap traced num of backtrace : %zd\n",
 		stack_size);
 	pr_out("[heaptrace] heap traced allocation size  : %s\n",
 		get_byte_unit(total_size).c_str());

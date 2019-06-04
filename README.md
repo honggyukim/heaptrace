@@ -84,7 +84,7 @@ $ heaptrace --top 3 ./factorial
  3 [0x7f28cd140830] __libc_start_main +0x3c
  4 [      0x400769] _start +0xa
 
-[heaptrace] heap traced allocation count : 9 times
+[heaptrace] heap traced num of backtrace : 9 times
 [heaptrace] heap traced allocation size  : 48 bytes
 [heaptrace] allocator info (virtual)     : 204.800 KB
 [heaptrace] allocator info (resident)    : 75.968 KB
