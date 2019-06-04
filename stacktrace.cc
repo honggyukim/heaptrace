@@ -265,9 +265,11 @@ void dump_stackmap(enum alloc_sort_order order)
 		std::string age = get_delta_time_unit(current - info.birth_time);
 
 		pr_out("=== stackmap #%d === [count/peak: %zd/%zd] "
-		       "[size/peak: %" PRIu64 "/%" PRIu64 "] [age: %s]\n",
+		       "[size/peak: %s/%s] [age: %s]\n",
 			++cnt, info.count, info.peak_count,
-			info.total_size, info.peak_total_size, age.c_str());
+			get_byte_unit(info.total_size).c_str(),
+			get_byte_unit(info.peak_total_size).c_str(),
+			age.c_str());
 
 		for (int i = 0; i < info.stack_depth; i++)
 			print_backtrace_symbol(i, stack_trace[i]);
@@ -275,8 +277,9 @@ void dump_stackmap(enum alloc_sort_order order)
 		pr_out("\n");
 	}
 
-	pr_out("Total size allocated %" PRIu64 "(%d) in top %d out of %zd stack trace\n\n",
-		total_size, alloc_size, cnt, stack_size);
+	pr_out("Total size allocated %s(%s) in top %d out of %zd stack trace\n\n",
+		get_byte_unit(total_size).c_str(), get_byte_unit(alloc_size).c_str(),
+		cnt, stack_size);
 
 	tfs->hook_guard = false;
 }
