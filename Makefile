@@ -22,7 +22,8 @@ HEAPTRACE_OBJS := $(patsubst %.cc,%.o,$(HEAPTRACE_SRCS))
 
 
 # build rule begin
-all: $(TARGETS) $(SAMPLES)
+all: $(TARGETS)
+	$(MAKE) -C samples
 
 heaptrace: $(HEAPTRACE_OBJS)
 	$(QUIET_CXX)$(CXX) $(CXXFLAGS) -o $@ $(HEAPTRACE_OBJS)
@@ -38,3 +39,4 @@ libheaptrace.so: $(LIB_OBJS)
 
 clean:
 	rm -f heaptrace libheaptrace.so $(LIB_OBJS) $(HEAPTRACE_OBJS)
+	$(MAKE) -C samples clean
