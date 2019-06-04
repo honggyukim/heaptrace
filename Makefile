@@ -5,7 +5,13 @@ CROSS_COMPILE ?= arm-linux-gnueabihf-
 CC  := gcc
 CXX := g++
 
-CXXFLAGS := -O2 -g -std=c++14
+CXXFLAGS := -std=c++14
+ifeq ($(DEBUG), 1)
+  CXXFLAGS += -O0 -g
+else
+  CXXFLAGS += -O2 -g
+endif
+
 LIB_CXXFLAGS := $(CXXFLAGS) -fPIC -fno-omit-frame-pointer -fvisibility=hidden
 LIB_LDFLAGS  := -ldl
 
