@@ -11,6 +11,8 @@
 #include <dlfcn.h>
 #include <cxxabi.h>
 
+#include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <vector>
 #include <map>
@@ -123,10 +125,9 @@ static void print_backtrace_symbol(int count, void *addr)
 	}
 }
 
-static utils::fmt_string get_delta_time_unit(std::chrono::nanoseconds delta)
+static std::string get_delta_time_unit(std::chrono::nanoseconds delta)
 {
-	utils::fmt_string str;
-	int ret;
+	std::string str;
 
 	auto h = std::chrono::duration_cast<std::chrono::hours>(delta);
 	delta -= h;
@@ -146,24 +147,24 @@ static utils::fmt_string get_delta_time_unit(std::chrono::nanoseconds delta)
 	auto nanos = delta;
 
 	if (h.count() > 0)
-		str.fmtset("%" PRId64 " hours %" PRId64 " mins", h.count(), mins.count());
+		str = utils::asprintf("%" PRId64 " hours %" PRId64 " mins", h.count(), mins.count());
 	else if (mins.count() > 0)
-		str.fmtset("%" PRId64 " mins %" PRId64 " secs", mins.count(), secs.count());
+		str = utils::asprintf("%" PRId64 " mins %" PRId64 " secs", mins.count(), secs.count());
 	else if (secs.count() > 0)
-		str.fmtset("%" PRId64 ".%" PRId64 " secs", secs.count(), millis.count());
+		str = utils::asprintf("%" PRId64 ".%" PRId64 " secs", secs.count(), millis.count());
 	else if (millis.count() > 0)
-		str.fmtset("%" PRId64 ".%" PRId64 " ms", millis.count(), micros.count());
+		str = utils::asprintf("%" PRId64 ".%" PRId64 " ms", millis.count(), micros.count());
 	else if (micros.count() > 0)
-		str.fmtset("%" PRId64 ".%" PRId64 " us", micros.count(), nanos.count());
+		str = utils::asprintf("%" PRId64 ".%" PRId64 " us", micros.count(), nanos.count());
 	else
-		str.fmtset("%" PRId64 " ns", nanos.count());
+		str = utils::asprintf("%" PRId64 " ns", nanos.count());
 
 	return str;
 }
 
-static utils::fmt_string get_byte_unit(uint64_t size)
+static std::string get_byte_unit(uint64_t size)
 {
-	utils::fmt_string str;
+	std::string str;
 	int ret;
 
 	utils::bytes sz(size);
@@ -177,28 +178,29 @@ static utils::fmt_string get_byte_unit(uint64_t size)
 	auto b = sz;
 
 	if (mb.count() > 0)
-		str.fmtset("%" PRId64 ".%" PRId64 " MB", mb.count(), kb.count());
+		str = utils::asprintf("%" PRId64 ".%" PRId64 " MB", mb.count(), kb.count());
 	else if (kb.count() > 0)
-		str.fmtset("%" PRId64 ".%" PRId64 " KB", kb.count(), b.count());
+		str = utils::asprintf("%" PRId64 ".%" PRId64 " KB", kb.count(), b.count());
 	else
-		str.fmtset("%" PRId64 " bytes", b.count());
+		str = utils::asprintf("%" PRId64 " bytes", b.count());
 
 	return str;
 }
 
 static void print_dump_header(void)
 {
-	int ret;
+	std::stringstream ss;
 	int tid = utils::gettid();
-	utils::fmt_string file_comm("/proc/%d/comm", tid);
-	utils::fmt_string comm(32);
 
-	utils::file_t file(file_comm);
-	if (file)
-		ret = fscanf(file, "%s", comm.data());
+	ss << "/proc/" << tid << "/comm";
 
+	std::string file_comm = ss.str();
+	std::fstream fs(file_comm);
+	std::string comm;
+
+	fs >> comm;
 	pr_out("\n=================================================================\n");
-	pr_out("    heaptrace of tid %d (%s)\n", tid, comm.get());
+	pr_out("    heaptrace of tid %d (%s)\n", tid, comm.c_str());
 	pr_out("=================================================================\n");
 }
 
@@ -260,12 +262,12 @@ void dump_stackmap(enum alloc_sort_order order)
 			continue;
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
-		utils::fmt_string age = get_delta_time_unit(current - info.birth_time);
+		std::string age = get_delta_time_unit(current - info.birth_time);
 
 		pr_out("=== stackmap #%d === [count/peak: %zd/%zd] "
 		       "[size/peak: %" PRIu64 "/%" PRIu64 "] [age: %s]\n",
 			++cnt, info.count, info.peak_count,
-			info.total_size, info.peak_total_size, age.get());
+			info.total_size, info.peak_total_size, age.c_str());
 
 		for (int i = 0; i < info.stack_depth; i++)
 			print_backtrace_symbol(i, stack_trace[i]);
