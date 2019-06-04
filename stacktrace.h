@@ -11,11 +11,9 @@
 
 #include "heaptrace.h"
 
-#define NUM_BACKTRACE     8
-
 extern struct opts opts;
 
-using stack_trace_t = std::array<void*, NUM_BACKTRACE>;
+using stack_trace_t = std::array<void*, DEPTH>;
 using addr_t = void*;
 using time_point_t = std::chrono::steady_clock::time_point;
 
@@ -53,7 +51,7 @@ inline void record_backtrace(size_t size, void* addr)
 	if (addr == NULL)
 		return;
 
-	nptrs = backtrace(stack_trace.data(), NUM_BACKTRACE);
+	nptrs = backtrace(stack_trace.data(), DEPTH);
 	__record_backtrace(size, addr, stack_trace, nptrs);
 }
 

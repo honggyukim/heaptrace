@@ -9,6 +9,12 @@ CXXFLAGS := -O2 -g -std=c++14
 LIB_CXXFLAGS := $(CXXFLAGS) -fPIC -fno-omit-frame-pointer -fvisibility=hidden
 LIB_LDFLAGS  := -ldl
 
+ifndef $(DEPTH)
+# default backtrace depth is 8
+DEPTH := 8
+endif
+LIB_CXXFLAGS += -DDEPTH=$(DEPTH)
+
 
 TARGETS := heaptrace libheaptrace.so
 
