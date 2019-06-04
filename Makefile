@@ -2,6 +2,13 @@
 # SPDX-License-Identifier: GPL-2.0
 CROSS_COMPILE ?= arm-linux-gnueabihf-
 
+ifneq ($(wildcard .config),)
+  include .config
+endif
+
+prefix ?= /usr
+DESTDIR := $(prefix)
+
 CC  := gcc
 CXX := g++
 
@@ -48,6 +55,14 @@ $(HEAPTRACE_OBJS): %.o: %.cc
 
 libheaptrace.so: $(LIB_OBJS)
 	$(QUIET_LINK)$(CXX) -shared -o $@ $^ $(LIB_LDFLAGS)
+
+install: all
+	install -m 755 heaptrace $(DESTDIR)/bin/heaptrace
+	install -m 755 libheaptrace.so $(DESTDIR)/lib/libheaptrace.so
+
+uninstall:
+	rm -f $(DESTDIR)/bin/heaptrace
+	rm -f $(DESTDIR)/lib/libheaptrace.so
 
 clean:
 	rm -f heaptrace libheaptrace.so $(LIB_OBJS) $(HEAPTRACE_OBJS)
