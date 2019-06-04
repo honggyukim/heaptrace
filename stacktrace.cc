@@ -215,6 +215,7 @@ static void print_dump_header(void)
 	std::string comm;
 
 	fs >> comm;
+	pr_out("=================================================================\n");
 	pr_out("[heaptrace] dump allocation status for /proc/%d/maps (%s)\n",
 		tid, comm.c_str());
 }
@@ -300,6 +301,7 @@ void dump_stackmap(enum alloc_sort_order order)
 
 	pr_out("[heaptrace] statm info (VSS/RSS/shared)  : %s\n",
 		read_statm().c_str());
+	pr_out("=================================================================\n");
 
 	tfs->hook_guard = false;
 }
