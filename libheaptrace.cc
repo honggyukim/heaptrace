@@ -44,6 +44,7 @@ static void heaptrace_init()
 {
 	auto* tfs = &thread_flags;
 	struct sigaction sigusr1, sigusr2;
+	int pid = getpid();
 
 	real_malloc = (MallocFunction)dlsym(RTLD_NEXT, "malloc");
 	real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
@@ -68,7 +69,7 @@ static void heaptrace_init()
 	// setup option values
 	opts.top = strtol(getenv("HEAPTRACE_NUM_TOP_BACKTRACE"), NULL, 0);
 
-	pr_out("\n== pid: %5d == heaptrace initialized for a new memory map\n", getpid());
+	pr_out("[heaptrace] initialized for /proc/%d/maps\n", pid);
 
 	tfs->initialized = true;
 }
@@ -77,8 +78,9 @@ __destructor
 static void heaptrace_fini()
 {
 	auto* tfs = &thread_flags;
+	int pid = getpid();
 
-	pr_out("\n== pid: %5d == heaptrace finalized\n", getpid());
+	pr_out("[heaptrace] finalized for /proc/%d/maps\n", pid);
 	dump_stackmap(ALLOC_SIZE);
 
 	// disable any other hooking after this.

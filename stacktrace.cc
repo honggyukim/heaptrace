@@ -199,29 +199,24 @@ static void print_dump_header(void)
 	std::string comm;
 
 	fs >> comm;
-	pr_out("\n=================================================================\n");
-	pr_out("    heaptrace of tid %d (%s)\n", tid, comm.c_str());
-	pr_out("=================================================================\n");
+	pr_out("[heaptrace] dump allocation status for /proc/%d/maps (%s)\n",
+		tid, comm.c_str());
 }
 
 void dump_stackmap(enum alloc_sort_order order)
 {
 	auto* tfs = &thread_flags;
-	int alloc_size;
 	uint64_t total_size = 0;
 	int cnt = 0;
 	time_point_t current;
 
-	if (stackmap.empty()) {
-		pr_out("\n");
+	if (stackmap.empty())
 		return;
-	}
 
 	tfs->hook_guard = true;
 
 	// get allocated size info from the allocator
 	struct mallinfo info = mallinfo();
-	alloc_size = info.uordblks;
 
 	// get current time
 	current = std::chrono::steady_clock::now();
@@ -264,7 +259,7 @@ void dump_stackmap(enum alloc_sort_order order)
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 		std::string age = get_delta_time_unit(current - info.birth_time);
 
-		pr_out("=== stackmap #%d === [count/peak: %zd/%zd] "
+		pr_out("=== backtrace #%d === [count/peak: %zd/%zd] "
 		       "[size/peak: %s/%s] [age: %s]\n",
 			++cnt, info.count, info.peak_count,
 			get_byte_unit(info.total_size).c_str(),
@@ -277,9 +272,15 @@ void dump_stackmap(enum alloc_sort_order order)
 		pr_out("\n");
 	}
 
-	pr_out("Total size allocated %s(%s) in top %d out of %zd stack trace\n\n",
-		get_byte_unit(total_size).c_str(), get_byte_unit(alloc_size).c_str(),
-		cnt, stack_size);
+	pr_out("[heaptrace] heap traced allocation count : %zd times\n",
+		stack_size);
+	pr_out("[heaptrace] heap traced allocation size  : %s\n",
+		get_byte_unit(total_size).c_str());
+
+	pr_out("[heaptrace] allocator info (virtual)     : %s\n",
+		get_byte_unit(info.arena + info.hblkhd).c_str());
+	pr_out("[heaptrace] allocator info (resident)    : %s\n",
+		get_byte_unit(info.uordblks).c_str());
 
 	tfs->hook_guard = false;
 }
