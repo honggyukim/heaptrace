@@ -27,7 +27,7 @@ enum options {
 
 static struct argp_option heaptrace_options[] = {
 	{ "help", 'h', 0, 0, "Give this help list" },
-	{ "top", OPT_top, "NUM_BACKTRACE", 0, "Set the number of top backtraces to show" },
+	{ "top", OPT_top, "NUM", 0, "Set the number of top backtraces to show" },
 	{ 0 }
 };
 
