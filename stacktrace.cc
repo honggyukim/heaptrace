@@ -187,6 +187,22 @@ static std::string get_byte_unit(uint64_t size)
 	return str;
 }
 
+std::string read_statm() {
+	int vss, rss, shared;
+	int pagesize_kb = sysconf(_SC_PAGESIZE);
+	std::fstream fs("/proc/self/statm");
+
+	fs >> vss >> rss >> shared;
+	vss    *= pagesize_kb;
+	rss    *= pagesize_kb;
+	shared *= pagesize_kb;
+
+	std::string str = get_byte_unit(vss) + " / "
+			+ get_byte_unit(rss) + " / "
+			+ get_byte_unit(shared);
+	return str;
+}
+
 static void print_dump_header(void)
 {
 	std::stringstream ss;
@@ -281,6 +297,9 @@ void dump_stackmap(enum alloc_sort_order order)
 		get_byte_unit(info.arena + info.hblkhd).c_str());
 	pr_out("[heaptrace] allocator info (resident)    : %s\n",
 		get_byte_unit(info.uordblks).c_str());
+
+	pr_out("[heaptrace] statm info (VSS/RSS/shared)  : %s\n",
+		read_statm().c_str());
 
 	tfs->hook_guard = false;
 }
