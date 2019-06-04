@@ -5,10 +5,15 @@
 
 #include <cstdio>
 #include <cstdarg>
+#include <unistd.h>
 #include <sys/syscall.h>
 
 #include <string>
 #include <chrono>
+
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
 
 namespace utils {
 
@@ -22,20 +27,7 @@ static int gettid(void)
 	return syscall(SYS_gettid);
 }
 
-static std::string asprintf(const char* fmt, ...)
-{
-	va_list args;
-	std::string str;
-	char *ptr;
-	int ret;
-
-	va_start(args, fmt);
-	ret = vasprintf(&ptr, fmt, args);
-	str = ptr;
-	free(ptr);
-	va_end(args);
-	return std::move(str);
-}
+std::string asprintf(const char* fmt, ...);
 
 } // namespace utils
 

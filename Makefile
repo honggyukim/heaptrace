@@ -9,7 +9,7 @@ CXXFLAGS := -O2 -g -std=c++14 -funwind-tables
 LDFLAGS  := -ldl
 
 host:
-	$(CXX) -fPIC -shared $(CXXFLAGS) -o libheaptrace.so libheaptrace.cc stacktrace.cc sighandler.cc $(LDFLAGS)
+	$(CXX) -fPIC -shared $(CXXFLAGS) -o libheaptrace.so libheaptrace.cc stacktrace.cc sighandler.cc utils.cc $(LDFLAGS)
 	$(CXX) $(CXXFLAGS) -o heaptrace heaptrace.cc
 	$(CXX) -o sample -funwind-tables sample.c
 	$(CXX) -o factorial -rdynamic -funwind-tables factorial.c
