@@ -21,6 +21,7 @@
 
 #include "heaptrace.h"
 #include "stacktrace.h"
+#include "compiler.h"
 #include "utils.h"
 
 #define SYMBOL_MAXLEN 128
@@ -60,6 +61,9 @@ void __record_backtrace(size_t size, void* addr,
 
 void release_backtrace(void* addr)
 {
+	if (unlikely(!addr))
+		return;
+
 	std::lock_guard<std::mutex> lock(container_mutex);
 
 	pr_dbg("  release_backtrace(%p)\n", addr);
