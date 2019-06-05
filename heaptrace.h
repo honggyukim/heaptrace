@@ -38,6 +38,7 @@ struct opts {
 	char *exename;
 
 	int top;
+	const char *sortkey;
 };
 
 #endif /* HEAPTRACE_HEAPTRACE_H */

@@ -68,6 +68,7 @@ static void heaptrace_init()
 
 	// setup option values
 	opts.top = strtol(getenv("HEAPTRACE_NUM_TOP_BACKTRACE"), NULL, 0);
+	opts.sortkey = getenv("HEAPTRACE_SORTKEY");
 
 	pr_out("[heaptrace] initialized for /proc/%d/maps\n", pid);
 
@@ -79,9 +80,14 @@ static void heaptrace_fini()
 {
 	auto* tfs = &thread_flags;
 	int pid = getpid();
+	enum alloc_sort_order order = ALLOC_SIZE;
 
 	pr_out("[heaptrace] finalized for /proc/%d/maps\n", pid);
-	dump_stackmap(ALLOC_SIZE);
+
+	if (!strcmp(opts.sortkey, "count"))
+		order = ALLOC_COUNT;
+
+	dump_stackmap(order);
 
 	// disable any other hooking after this.
 	tfs->hook_guard = true;

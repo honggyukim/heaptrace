@@ -23,11 +23,13 @@ const char *argp_program_bug_address = "http://mod.lge.com/hub/hong.gyu.kim/heap
 
 enum options {
 	OPT_top = 301,
+	OPT_sort,
 };
 
 static struct argp_option heaptrace_options[] = {
 	{ "help", 'h', 0, 0, "Give this help list" },
 	{ "top", OPT_top, "NUM", 0, "Set the number of top backtraces to show" },
+	{ "sort", 's', "KEY", 0, "Sort the backtraces based on KEY (count or size)" },
 	{ 0 }
 };
 
@@ -42,6 +44,10 @@ static error_t parse_option(int key, char *arg, struct argp_state *state)
 
 	case OPT_top:
 		opts->top = strtol(arg, NULL, 0);
+		break;
+
+	case 's':
+		opts->sortkey = arg;
 		break;
 
 	case ARGP_KEY_ARG:
@@ -84,6 +90,7 @@ static void init_options(int argc, char *argv[])
 
 	// set default option values
 	opts.top = 10;
+	opts.sortkey = "size";
 
 	argp_parse(&argp, argc, argv, ARGP_IN_ORDER, NULL, &opts);
 }
@@ -108,6 +115,8 @@ static void setup_child_environ(struct opts *opts, int argc, char *argv[])
 
 	snprintf(buf, sizeof(buf), "%d", opts->top);
 	setenv("HEAPTRACE_NUM_TOP_BACKTRACE", buf, 1);
+
+	setenv("HEAPTRACE_SORTKEY", opts->sortkey, 1);
 }
 
 int main(int argc, char *argv[])
