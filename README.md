@@ -101,3 +101,9 @@ $ heaptrace --top 3 --sort count /usr/bin/node --expose-gc -e 'gc()'
 [heaptrace] statm info (VSS/RSS/shared)  : 134.201 MB / 40.960 KB / 0 bytes
 =================================================================
 ```
+
+It can also dump allocation status when it receives a signal as follows:
+- `SIGUSR1`: dump the current allocation status with sort order by "size"
+- `SIGUSR2`: dump the current allocation status with sort order by "count"
+
+It can be useful for long running programs.
