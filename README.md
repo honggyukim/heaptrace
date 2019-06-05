@@ -48,46 +48,56 @@ It traces memory allocation of the target program and dump the memory allocation
 status when program is finished.  If every memory allocation is properly
 deallocated, then it doesn't print anything.
 
+There are some options as follows:
+- `--sort` option is to set the sort order to show.  Its value can be either
+  "size" or "count" and its default value is "size".
+- `--top` option is to set the number of backtraces to show and its default
+  value is 10.
+
 Here is an example usage of heaptrace.  It traces memory allocation of the
-target program `factorial`, then prints currently live allocation info based on
-each backtrace of allocation.
+target program `node`, then prints currently live allocation info based on
+each backtrace of allocation.  It shows that some of the allocated objects are
+not deallocated until the program is finished.
 ```
-$ heaptrace --top 3 ./factorial
-[heaptrace] initialized for /proc/31027/maps
-[heaptrace] finalized for /proc/31027/maps
+$ heaptrace --top 3 --sort count /usr/bin/node --expose-gc -e 'gc()'
+[heaptrace] initialized for /proc/5879/maps
+[heaptrace] finalized for /proc/5879/maps
 =================================================================
-[heaptrace] dump allocation status for /proc/31027/maps (factorial)
-=== backtrace #1 === [count/peak: 1/1] [size/peak: 10 bytes/10 bytes] [age: 21.74 us]
- 0 [0x7f28cd4ec74c] malloc +0x1b
- 1 [      0x40086d] fac +0xd
- 2 [      0x400881] fac +0x12
- 3 [      0x400881] fac +0x12
- 4 [      0x400881] fac +0x12
- 5 [      0x400881] fac +0x12
- 6 [      0x400881] fac +0x12
- 7 [      0x400881] fac +0x12
+[heaptrace] dump allocation status for /proc/5879/maps (node)
+=== backtrace #1 === [count/peak: 43/60] [size/peak: 22.704 KB/31.680 KB] [age: 6.236 ms]
+ 0 [0x7fe72e46476c] malloc +0x1b
+ 1 [0x7fe72dd61e78] operator new(unsigned long) +0x6
+ 2 [      0xf27811] /usr/bin/node (+0xf27811)
+ 3 [      0xf2e57d] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointer(v8::internal::Root, char const*, v8::internal::Objec... +0x1b
+ 4 [     0x121c32d] v8::internal::SerializerDeserializer::Iterate(v8::internal::Isolate*, v8::internal::RootVisitor*) +0x47
+ 5 [      0xf07e45] v8::internal::Heap::IterateStrongRoots(v8::internal::RootVisitor*, v8::internal::VisitMode) +0x91
+ 6 [      0xf40b6b] v8::internal::MarkCompactCollector::MarkLiveObjects() +0x72
+ 7 [      0xf42071] v8::internal::MarkCompactCollector::CollectGarbage() +0x4
 
-=== backtrace #2 === [count/peak: 1/1] [size/peak: 10 bytes/10 bytes] [age: 29.373 us]
- 0 [0x7f28cd4ec898] calloc +0x1e
- 1 [      0x400863] fac +0xb
- 2 [      0x400881] fac +0x12
- 3 [      0x400881] fac +0x12
- 4 [      0x400881] fac +0x12
- 5 [      0x400881] fac +0x12
- 6 [      0x400881] fac +0x12
- 7 [      0x400881] fac +0x12
+=== backtrace #2 === [count/peak: 12/13] [size/peak: 6.336 KB/6.864 KB] [age: 6.400 ms]
+ 0 [0x7fe72e46476c] malloc +0x1b
+ 1 [0x7fe72dd61e78] operator new(unsigned long) +0x6
+ 2 [      0xf27811] /usr/bin/node (+0xf27811)
+ 3 [      0xf29dd4] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointers(v8::internal::Root, char const*, v8::internal::Obje... +0x29
+ 4 [      0xb27068] v8::internal::HandleScopeImplementer::IterateThis(v8::internal::RootVisitor*) +0x1e
+ 5 [      0xf07d33] v8::internal::Heap::IterateStrongRoots(v8::internal::RootVisitor*, v8::internal::VisitMode) +0x4c
+ 6 [      0xf40b6b] v8::internal::MarkCompactCollector::MarkLiveObjects() +0x72
+ 7 [      0xf42071] v8::internal::MarkCompactCollector::CollectGarbage() +0x4
 
-=== backtrace #3 === [count/peak: 1/1] [size/peak: 7 bytes/7 bytes] [age: 103.486 us]
- 0 [0x7f28cd4ec74c] malloc +0x1b
- 1 [      0x40084e] fac +0x6
- 2 [      0x4008a7] main +0x8
- 3 [0x7f28cd140830] __libc_start_main +0x3c
- 4 [      0x400769] _start +0xa
+=== backtrace #3 === [count/peak: 10/10] [size/peak: 5.280 KB/5.280 KB] [age: 6.322 ms]
+ 0 [0x7fe72e46476c] malloc +0x1b
+ 1 [0x7fe72dd61e78] operator new(unsigned long) +0x6
+ 2 [      0xf27811] /usr/bin/node (+0xf27811)
+ 3 [      0xf2e57d] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointer(v8::internal::Root, char const*, v8::internal::Objec... +0x1b
+ 4 [      0xf07f08] v8::internal::Heap::IterateStrongRoots(v8::internal::RootVisitor*, v8::internal::VisitMode) +0xc2
+ 5 [      0xf40b6b] v8::internal::MarkCompactCollector::MarkLiveObjects() +0x72
+ 6 [      0xf42071] v8::internal::MarkCompactCollector::CollectGarbage() +0x4
+ 7 [      0xf15621] v8::internal::Heap::MarkCompact() +0x28
 
-[heaptrace] heap traced num of backtrace : 9 times
-[heaptrace] heap traced allocation size  : 48 bytes
-[heaptrace] allocator info (virtual)     : 204.800 KB
-[heaptrace] allocator info (resident)    : 75.968 KB
-[heaptrace] statm info (VSS/RSS/shared)  : 134.205 MB / 36.864 KB / 0 bytes
+[heaptrace] heap traced num of backtrace : 64
+[heaptrace] heap traced allocation size  : 59.215 KB
+[heaptrace] allocator info (virtual)     : 2.121 MB
+[heaptrace] allocator info (resident)    : 414.288 KB
+[heaptrace] statm info (VSS/RSS/shared)  : 134.201 MB / 40.960 KB / 0 bytes
 =================================================================
 ```
