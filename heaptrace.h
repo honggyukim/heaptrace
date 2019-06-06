@@ -20,9 +20,9 @@
 #define pr_dbg(fmt, ...)
 #endif
 
-#define pr_out(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
+#define pr_out(fmt, ...) fprintf(stdout, fmt, ## __VA_ARGS__)
 
-#define pr_red(fmt, ...) fprintf(stderr, TERM_COLOR_RED fmt TERM_COLOR_RESET, ## __VA_ARGS__)
+#define pr_red(fmt, ...) fprintf(stdout, TERM_COLOR_RED fmt TERM_COLOR_RESET, ## __VA_ARGS__)
 
 struct thread_flags_t {
 	// to protect unexpected recursive malloc calls
