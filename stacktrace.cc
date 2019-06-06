@@ -207,8 +207,11 @@ std::string read_statm() {
 	return std::move(str);
 }
 
-static void print_dump_header(void)
+static void print_dump_stackmap(const time_point_t& current, struct mallinfo& info,
+		std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
 {
+	int cnt = 0;
+	uint64_t total_size = 0;
 	std::stringstream ss;
 	int tid = utils::gettid();
 
@@ -222,51 +225,6 @@ static void print_dump_header(void)
 	pr_out("=================================================================\n");
 	pr_out("[heaptrace] dump allocation status for /proc/%d/maps (%s)\n",
 		tid, comm.c_str());
-}
-
-void dump_stackmap(enum alloc_sort_order order)
-{
-	auto* tfs = &thread_flags;
-	uint64_t total_size = 0;
-	int cnt = 0;
-	time_point_t current;
-
-	if (stackmap.empty())
-		return;
-
-	tfs->hook_guard = true;
-
-	// get allocated size info from the allocator
-	struct mallinfo info = mallinfo();
-
-	// get current time
-	current = std::chrono::steady_clock::now();
-
-	// sort the stack trace based on the count and then total_size
-	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
-	{
-		// protect stackmap access
-		std::lock_guard<std::mutex> lock(container_mutex);
-
-		for (auto& p : stackmap)
-			sorted_stack.push_back(make_pair(p.first, p.second));
-	}
-	std::sort(sorted_stack.begin(), sorted_stack.end(),
-		[order](std::pair<stack_trace_t, stack_info_t>& p1,
-		   std::pair<stack_trace_t, stack_info_t>& p2) {
-			if (order == ALLOC_COUNT) {
-				if (p1.second.count == p2.second.count)
-					return p1.second.total_size > p2.second.total_size;
-				return p1.second.count > p2.second.count;
-			}
-			else if (order == ALLOC_SIZE) {
-				if (p1.second.total_size == p2.second.total_size)
-					return p1.second.count > p2.second.count;
-				return p1.second.total_size > p2.second.total_size;
-			}
-	});
-
-	print_dump_header();
 
 	size_t stack_size = sorted_stack.size();
 	for (int i = 0; i < stack_size; i++) {
@@ -306,6 +264,49 @@ void dump_stackmap(enum alloc_sort_order order)
 	pr_out("[heaptrace] statm info (VSS/RSS/shared)  : %s\n",
 		read_statm().c_str());
 	pr_out("=================================================================\n");
+}
+
+void dump_stackmap(enum alloc_sort_order order)
+{
+	auto* tfs = &thread_flags;
+	time_point_t current;
+
+	if (stackmap.empty())
+		return;
+
+	tfs->hook_guard = true;
+
+	// get allocated size info from the allocator
+	struct mallinfo info = mallinfo();
+
+	// get current time
+	current = std::chrono::steady_clock::now();
+
+	// sort the stack trace based on the count and then total_size
+	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
+	{
+		// protect stackmap access
+		std::lock_guard<std::mutex> lock(container_mutex);
+
+		for (auto& p : stackmap)
+			sorted_stack.push_back(make_pair(p.first, p.second));
+	}
+	std::sort(sorted_stack.begin(), sorted_stack.end(),
+		[order](std::pair<stack_trace_t, stack_info_t>& p1,
+		   std::pair<stack_trace_t, stack_info_t>& p2) {
+			if (order == ALLOC_COUNT) {
+				if (p1.second.count == p2.second.count)
+					return p1.second.total_size > p2.second.total_size;
+				return p1.second.count > p2.second.count;
+			}
+			else if (order == ALLOC_SIZE) {
+				if (p1.second.total_size == p2.second.total_size)
+					return p1.second.count > p2.second.count;
+				return p1.second.total_size > p2.second.total_size;
+			}
+	});
+
+	print_dump_stackmap(current, info, sorted_stack);
 
 	tfs->hook_guard = false;
 }
