@@ -39,6 +39,9 @@ struct opts {
 
 	int top;
 	const char *sortkey;
+	bool flamegraph;
 };
+
+extern opts opts;
 
 #endif /* HEAPTRACE_HEAPTRACE_H */
