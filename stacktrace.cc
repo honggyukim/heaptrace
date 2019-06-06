@@ -129,6 +129,40 @@ static void print_backtrace_symbol(int count, void *addr)
 	}
 }
 
+static void print_backtrace_symbol_flamegraph(void *addr, const char *semicolon)
+{
+	Dl_info dlip;
+	char *symbol;
+	int offset;
+	int status;
+
+	// dladdr() translates address to symbolic info.
+	dladdr(addr, &dlip);
+
+	symbol = abi::__cxa_demangle(dlip.dli_sname, 0, 0, &status);
+
+	if (status == -2 && !symbol)
+		symbol = strdup(dlip.dli_sname);
+
+	if (symbol) {
+		int len = SYMBOL_MAXLEN;
+
+		if (strlen(symbol) > len) {
+			symbol[len - 3] = '.';
+			symbol[len - 2] = '.';
+			symbol[len - 1] = '.';
+			symbol[len]     = '\0';
+		}
+		offset = static_cast<int>(static_cast<int*>(addr) -
+					  static_cast<int*>(dlip.dli_saddr));
+		pr_out("%s%s+%#x", semicolon, symbol, offset);
+		free(symbol);
+	}
+	else {
+		pr_out("%s%s+%p", semicolon, dlip.dli_fname, addr);
+	}
+}
+
 static std::string get_delta_time_unit(std::chrono::nanoseconds delta)
 {
 	std::string str;
@@ -266,7 +300,29 @@ static void print_dump_stackmap(const time_point_t& current, struct mallinfo& in
 	pr_out("=================================================================\n");
 }
 
-void dump_stackmap(enum alloc_sort_order order)
+static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
+{
+	size_t stack_size = sorted_stack.size();
+	for (int i = 0; i < stack_size; i++) {
+		const stack_info_t& info = sorted_stack[i].second;
+		size_t count = info.count;
+		uint64_t size = info.total_size;
+		const char *semicolon = "";
+
+		if (i >= opts.top)
+			continue;
+
+		const stack_trace_t& stack_trace = sorted_stack[i].first;
+
+		for (int i = info.stack_depth - 1; i >= 0; i--) {
+			print_backtrace_symbol_flamegraph(stack_trace[i], semicolon);
+			semicolon = ";";
+		}
+		pr_out(" %lu\n", size);
+	}
+}
+
+void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
 {
 	auto* tfs = &thread_flags;
 	time_point_t current;
@@ -306,7 +362,10 @@ void dump_stackmap(enum alloc_sort_order order)
 			}
 	});
 
-	print_dump_stackmap(current, info, sorted_stack);
+	if (flamegraph)
+		print_dump_stackmap_flamegraph(sorted_stack);
+	else
+		print_dump_stackmap(current, info, sorted_stack);
 
 	tfs->hook_guard = false;
 }

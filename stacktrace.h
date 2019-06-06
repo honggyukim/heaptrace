@@ -57,6 +57,6 @@ inline void record_backtrace(size_t size, void* addr)
 
 void release_backtrace(void* addr);
 
-void dump_stackmap(enum alloc_sort_order order);
+void dump_stackmap(enum alloc_sort_order order, bool flamegraph = false);
 
 #endif /* HEAPTRACE_STACKTRACE_H */
