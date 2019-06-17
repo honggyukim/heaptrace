@@ -11,6 +11,8 @@
 #include <dlfcn.h>
 #include <signal.h>
 
+#include <sstream>
+
 #include "heaptrace.h"
 #include "compiler.h"
 #include "stacktrace.h"
@@ -39,12 +41,15 @@ thread_local struct thread_flags_t thread_flags;
 
 struct opts opts;
 
+FILE *outfp;
+
 __constructor
 static void heaptrace_init()
 {
 	auto* tfs = &thread_flags;
 	struct sigaction sigusr1, sigusr2;
 	int pid = getpid();
+	std::stringstream ss;
 
 	real_malloc = (MallocFunction)dlsym(RTLD_NEXT, "malloc");
 	real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
@@ -71,6 +76,14 @@ static void heaptrace_init()
 	opts.sortkey = getenv("HEAPTRACE_SORTKEY");
 	opts.flamegraph = strtol(getenv("HEAPTRACE_FLAME_GRAPH"), NULL, 0);
 
+	opts.outfile = getenv("HEAPTRACE_OUTFILE");
+	if (opts.outfile) {
+		ss << opts.outfile << "." << pid;
+		outfp = fopen(ss.str().c_str(), "w");
+	}
+	else
+		outfp = stdout;
+
 	if (!opts.flamegraph)
 		pr_out("[heaptrace] initialized for /proc/%d/maps\n", pid);
 
@@ -91,6 +104,9 @@ static void heaptrace_fini()
 		order = ALLOC_COUNT;
 
 	dump_stackmap(order, opts.flamegraph);
+
+	if (opts.outfile)
+		fclose(outfp);
 
 	// disable any other hooking after this.
 	tfs->hook_guard = true;

@@ -3,6 +3,10 @@
 #ifndef HEAPTRACE_HEAPTRACE_H
 #define HEAPTRACE_HEAPTRACE_H
 
+#include <stdio.h>
+
+extern FILE *outfp;
+
 #define TERM_COLOR_NORMAL   ""
 #define TERM_COLOR_RESET    "\033[0m"
 #define TERM_COLOR_BOLD     "\033[1m"
@@ -20,7 +24,7 @@
 #define pr_dbg(fmt, ...)
 #endif
 
-#define pr_out(fmt, ...) fprintf(stdout, fmt, ## __VA_ARGS__)
+#define pr_out(fmt, ...) fprintf(outfp, fmt, ## __VA_ARGS__)
 
 #define pr_red(fmt, ...) fprintf(stdout, TERM_COLOR_RED fmt TERM_COLOR_RESET, ## __VA_ARGS__)
 
@@ -40,6 +44,7 @@ struct opts {
 	int top;
 	const char *sortkey;
 	bool flamegraph;
+	char *outfile;
 };
 
 extern opts opts;
