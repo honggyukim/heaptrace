@@ -348,8 +348,8 @@ void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
 			sorted_stack.push_back(make_pair(p.first, p.second));
 	}
 	std::sort(sorted_stack.begin(), sorted_stack.end(),
-		[order](std::pair<stack_trace_t, stack_info_t>& p1,
-		   std::pair<stack_trace_t, stack_info_t>& p2) {
+		[order](const std::pair<stack_trace_t, stack_info_t>& p1,
+			const std::pair<stack_trace_t, stack_info_t>& p2) {
 			if (order == ALLOC_COUNT) {
 				if (p1.second.count == p2.second.count)
 					return p1.second.total_size > p2.second.total_size;
