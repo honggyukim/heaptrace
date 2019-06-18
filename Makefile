@@ -1,7 +1,5 @@
 # Copyright (c) 2022 LG Electronics Inc.
 # SPDX-License-Identifier: GPL-2.0
-CROSS_COMPILE ?= arm-linux-gnueabihf-
-
 ifneq ($(wildcard .config),)
   include .config
 endif
@@ -9,8 +7,9 @@ endif
 prefix ?= /usr
 DESTDIR := $(prefix)
 
-CC  := gcc
-CXX := g++
+$(call allow-override,CC,$(CROSS_COMPILE)gcc)
+$(call allow-override,AR,$(CROSS_COMPILE)ar)
+$(call allow-override,LD,$(CROSS_COMPILE)ld)
 
 CXXFLAGS := -std=c++14
 ifeq ($(DEBUG), 1)
