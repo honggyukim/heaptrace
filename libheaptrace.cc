@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include <signal.h>
+#include <sys/mman.h>
 
 #include <sstream>
 
@@ -32,6 +33,8 @@ typedef void* (*CallocFunction)(size_t nmemb, size_t size);
 typedef void* (*ReallocFunction)(void *ptr, size_t size);
 typedef void* (*MemalignFunction)(size_t alignment, size_t size);
 typedef int   (*PosixMemalignFunction)(void **memptr, size_t alignment, size_t size);
+typedef void* (*MmapFunction)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+typedef int   (*MunmapFunction)(void *addr, size_t length);
 
 static MallocFunction        real_malloc;
 static FreeFunction          real_free;
@@ -39,6 +42,8 @@ static CallocFunction        real_calloc;
 static ReallocFunction       real_realloc;
 static MemalignFunction      real_memalign;
 static PosixMemalignFunction real_posix_memalign;
+static MmapFunction          real_mmap;
+static MunmapFunction        real_munmap;
 
 thread_local struct thread_flags_t thread_flags;
 
@@ -60,6 +65,8 @@ static void heaptrace_init()
 	real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
 	real_memalign = (MemalignFunction)dlsym(RTLD_NEXT, "memalign");
 	real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
+	real_mmap = (MmapFunction)dlsym(RTLD_NEXT, "mmap");
+	real_munmap = (MunmapFunction)dlsym(RTLD_NEXT, "munmap");
 
 	sigusr1.sa_handler = sigusr1_handler;
 	sigemptyset(&sigusr1.sa_mask);
@@ -226,6 +233,50 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 	pr_dbg("posix_memalign(%p, %zd, %zd) = %d\n", memptr, alignment, size, ret);
 	if (ret == 0)
 		record_backtrace(size, *memptr);
+
+	tfs->hook_guard = false;
+
+	return ret;
+}
+
+extern "C" __visible_default
+void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+{
+	auto *tfs = &thread_flags;
+
+	if (unlikely(!tfs->initialized))
+		real_mmap = (MmapFunction)dlsym(RTLD_NEXT, "mmap");
+
+	if (unlikely(tfs->hook_guard))
+		return real_mmap(addr, length, prot, flags, fd, offset);
+
+	tfs->hook_guard = true;
+
+	void* p = real_mmap(addr, length, prot, flags, fd, offset);
+	if (p != MAP_FAILED)
+		record_backtrace(length, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
+
+extern "C" __visible_default
+int munmap(void *addr, size_t length)
+{
+	auto *tfs = &thread_flags;
+
+	if (unlikely(!tfs->initialized))
+		real_munmap = (MunmapFunction)dlsym(RTLD_NEXT, "munmap");
+
+	if (unlikely(tfs->hook_guard))
+		return real_munmap(addr, length);
+
+	tfs->hook_guard = true;
+
+	int ret = real_munmap(addr, length);
+	if (ret != -1)
+		release_backtrace(addr);
 
 	tfs->hook_guard = false;
 
