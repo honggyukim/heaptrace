@@ -23,18 +23,21 @@ extern "C" __weak void* __libc_malloc(size_t size);
 extern "C" __weak void  __libc_free(void* ptr);
 extern "C" __weak void* __libc_calloc(size_t nmemb, size_t size);
 extern "C" __weak void* __libc_realloc(void *ptr, size_t size);
+extern "C" __weak void* __libc_memalign(size_t alignment, size_t size);
 extern "C" __weak int   __posix_memalign(void **memptr, size_t alignment, size_t size);
 
 typedef void* (*MallocFunction)(size_t size);
 typedef void  (*FreeFunction)(void *ptr);
 typedef void* (*CallocFunction)(size_t nmemb, size_t size);
 typedef void* (*ReallocFunction)(void *ptr, size_t size);
+typedef void* (*MemalignFunction)(size_t alignment, size_t size);
 typedef int   (*PosixMemalignFunction)(void **memptr, size_t alignment, size_t size);
 
 static MallocFunction        real_malloc;
 static FreeFunction          real_free;
 static CallocFunction        real_calloc;
 static ReallocFunction       real_realloc;
+static MemalignFunction      real_memalign;
 static PosixMemalignFunction real_posix_memalign;
 
 thread_local struct thread_flags_t thread_flags;
@@ -55,6 +58,7 @@ static void heaptrace_init()
 	real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
 	real_calloc = (CallocFunction)dlsym(RTLD_NEXT, "calloc");
 	real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
+	real_memalign = (MemalignFunction)dlsym(RTLD_NEXT, "memalign");
 	real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
 
 	sigusr1.sa_handler = sigusr1_handler;
@@ -182,6 +186,25 @@ void *realloc(void *ptr, size_t size)
 	void* p = real_realloc(ptr, size);
 	pr_dbg("realloc(%p, %zd) = %p\n", ptr, size, p);
 	release_backtrace(ptr);
+	record_backtrace(size, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
+
+extern "C" __visible_default
+void *memalign(size_t alignment, size_t size)
+{
+	auto *tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
+		return __libc_memalign(alignment, size);
+
+	tfs->hook_guard = true;
+
+	void *p = real_memalign(alignment, size);
+	pr_dbg("memalign(%zd, %zd) = %p\n", alignment, size, p);
 	record_backtrace(size, p);
 
 	tfs->hook_guard = false;
