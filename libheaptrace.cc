@@ -112,7 +112,7 @@ static void heaptrace_fini()
 	tfs->hook_guard = true;
 }
 
-extern "C"
+extern "C" __visible_default
 void* malloc(size_t size)
 {
 	auto* tfs = &thread_flags;
@@ -131,7 +131,7 @@ void* malloc(size_t size)
 	return p;
 }
 
-extern "C"
+extern "C" __visible_default
 void free(void *ptr)
 {
 	auto* tfs = &thread_flags;
@@ -150,7 +150,7 @@ void free(void *ptr)
 	tfs->hook_guard = false;
 }
 
-extern "C"
+extern "C" __visible_default
 void *calloc(size_t nmemb, size_t size)
 {
 	auto* tfs = &thread_flags;
@@ -169,7 +169,7 @@ void *calloc(size_t nmemb, size_t size)
 	return p;
 }
 
-extern "C"
+extern "C" __visible_default
 void *realloc(void *ptr, size_t size)
 {
 	auto* tfs = &thread_flags;
@@ -189,7 +189,7 @@ void *realloc(void *ptr, size_t size)
 	return p;
 }
 
-extern "C"
+extern "C" __visible_default
 int posix_memalign(void **memptr, size_t alignment, size_t size)
 {
 	auto *tfs = &thread_flags;
