@@ -48,7 +48,7 @@ inline void record_backtrace(size_t size, void* addr)
 	int nptrs;
 	stack_trace_t stack_trace = { 0 };
 
-	if (addr == NULL)
+	if (unlikely(!addr))
 		return;
 
 	nptrs = backtrace(stack_trace.data(), DEPTH);
