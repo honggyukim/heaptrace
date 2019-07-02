@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include "heaptrace.h"
+#include "compiler.h"
 
 extern struct opts opts;
 
