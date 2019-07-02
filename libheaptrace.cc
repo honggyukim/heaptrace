@@ -26,6 +26,8 @@ extern "C" __weak void* __libc_calloc(size_t nmemb, size_t size);
 extern "C" __weak void* __libc_realloc(void *ptr, size_t size);
 extern "C" __weak void* __libc_memalign(size_t alignment, size_t size);
 extern "C" __weak int   __posix_memalign(void **memptr, size_t alignment, size_t size);
+extern "C" __weak void* __mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
+extern "C" __weak int   __munmap(void *addr, size_t len);
 
 typedef void* (*MallocFunction)(size_t size);
 typedef void  (*FreeFunction)(void *ptr);
@@ -244,15 +246,13 @@ void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(!tfs->initialized))
-		real_mmap = (MmapFunction)dlsym(RTLD_NEXT, "mmap");
-
-	if (unlikely(tfs->hook_guard))
-		return real_mmap(addr, length, prot, flags, fd, offset);
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
+		return __mmap(addr, length, prot, flags, fd, offset);
 
 	tfs->hook_guard = true;
 
 	void* p = real_mmap(addr, length, prot, flags, fd, offset);
+	pr_dbg("mmap(%p, %zd, %#x, %#x, %d, %ld) = %p\n", addr, length, prot, flags, fd, offset, p);
 	if (p != MAP_FAILED)
 		record_backtrace(length, p);
 
@@ -266,15 +266,13 @@ int munmap(void *addr, size_t length)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(!tfs->initialized))
-		real_munmap = (MunmapFunction)dlsym(RTLD_NEXT, "munmap");
-
-	if (unlikely(tfs->hook_guard))
-		return real_munmap(addr, length);
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
+		return __munmap(addr, length);
 
 	tfs->hook_guard = true;
 
 	int ret = real_munmap(addr, length);
+	pr_dbg("munmap(%p, %zd) = %d\n", addr, length, ret);
 	if (ret != -1)
 		release_backtrace(addr);
 
