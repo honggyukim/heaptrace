@@ -49,7 +49,7 @@ thread_local struct thread_flags_t thread_flags;
 
 struct opts opts;
 
-FILE *outfp;
+FILE *outfp = stdout;
 
 __constructor
 static void heaptrace_init()
