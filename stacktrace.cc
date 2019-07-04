@@ -318,7 +318,7 @@ static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, 
 			print_backtrace_symbol_flamegraph(stack_trace[i], semicolon);
 			semicolon = ";";
 		}
-		pr_out(" %lu\n", size);
+		pr_out(" %" PRIu64 "\n", size);
 	}
 }
 
