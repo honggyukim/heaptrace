@@ -228,7 +228,7 @@ static std::string get_byte_unit(uint64_t size)
 std::string read_statm() {
 	int vss, rss, shared;
 	int pagesize_kb = sysconf(_SC_PAGESIZE);
-	std::fstream fs("/proc/self/statm");
+	std::ifstream fs("/proc/self/statm");
 
 	fs >> vss >> rss >> shared;
 	vss    *= pagesize_kb;
@@ -252,7 +252,7 @@ static void print_dump_stackmap(const time_point_t& current, struct mallinfo& in
 	ss << "/proc/" << tid << "/comm";
 
 	std::string file_comm = ss.str();
-	std::fstream fs(file_comm);
+	std::ifstream fs(file_comm);
 	std::string comm;
 
 	fs >> comm;
