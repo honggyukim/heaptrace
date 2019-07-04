@@ -27,6 +27,11 @@ DEPTH := 8
 endif
 LIB_CXXFLAGS += -DDEPTH=$(DEPTH)
 
+ifeq ($(M32), 1)
+  CXXFLAGS     += -m32
+  LIB_CXXFLAGS += -m32
+  LIB_LDFLAGS  += -m32
+endif
 
 TARGETS := heaptrace libheaptrace.so
 
