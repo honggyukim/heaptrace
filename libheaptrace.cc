@@ -226,7 +226,7 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(!tfs->initialized))
+	if (unlikely(!real_posix_memalign))
 		real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
 
 	if (unlikely(tfs->hook_guard || !tfs->initialized))
@@ -249,7 +249,7 @@ void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(!tfs->initialized))
+	if (unlikely(!real_mmap))
 		real_mmap = (MmapFunction)dlsym(RTLD_NEXT, "mmap");
 
 	if (unlikely(tfs->hook_guard || !tfs->initialized))
@@ -272,7 +272,7 @@ int munmap(void *addr, size_t length)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(!tfs->initialized))
+	if (unlikely(!real_munmap))
 		real_munmap = (MunmapFunction)dlsym(RTLD_NEXT, "munmap");
 
 	if (unlikely(tfs->hook_guard || !tfs->initialized))
