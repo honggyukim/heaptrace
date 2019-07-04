@@ -20,7 +20,7 @@ std::string asprintf(const char* fmt, ...)
 	str = ptr;
 	free(ptr);
 	va_end(args);
-	return std::move(str);
+	return str;
 }
 
 } // namespace utils
