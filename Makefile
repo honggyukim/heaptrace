@@ -11,7 +11,7 @@ $(call allow-override,CC,$(CROSS_COMPILE)gcc)
 $(call allow-override,AR,$(CROSS_COMPILE)ar)
 $(call allow-override,LD,$(CROSS_COMPILE)ld)
 
-CXXFLAGS := -std=c++14
+CXXFLAGS := -std=c++11
 ifeq ($(DEBUG), 1)
   CXXFLAGS += -O0 -g
 else
