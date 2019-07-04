@@ -246,8 +246,11 @@ void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
 	auto *tfs = &thread_flags;
 
+	if (unlikely(!tfs->initialized))
+		real_mmap = (MmapFunction)dlsym(RTLD_NEXT, "mmap");
+
 	if (unlikely(tfs->hook_guard || !tfs->initialized))
-		return __mmap(addr, length, prot, flags, fd, offset);
+		return real_mmap(addr, length, prot, flags, fd, offset);
 
 	tfs->hook_guard = true;
 
@@ -266,8 +269,11 @@ int munmap(void *addr, size_t length)
 {
 	auto *tfs = &thread_flags;
 
+	if (unlikely(!tfs->initialized))
+		real_munmap = (MunmapFunction)dlsym(RTLD_NEXT, "munmap");
+
 	if (unlikely(tfs->hook_guard || !tfs->initialized))
-		return __munmap(addr, length);
+		return real_munmap(addr, length);
 
 	tfs->hook_guard = true;
 
