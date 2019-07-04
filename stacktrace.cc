@@ -360,6 +360,8 @@ void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
 					return p1.second.count > p2.second.count;
 				return p1.second.total_size > p2.second.total_size;
 			}
+			// not implemented yet
+			abort();
 	});
 
 	if (flamegraph)
