@@ -226,8 +226,11 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 {
 	auto *tfs = &thread_flags;
 
+	if (unlikely(!tfs->initialized))
+		real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
+
 	if (unlikely(tfs->hook_guard || !tfs->initialized))
-		return __posix_memalign(memptr, alignment, size);
+		return real_posix_memalign(memptr, alignment, size);
 
 	tfs->hook_guard = true;
 
