@@ -29,6 +29,14 @@ static int gettid(void)
 
 std::string asprintf(const char* fmt, ...);
 
+struct enum_table {
+	const char *str;
+	int val;
+};
+
+std::string mmap_prot_string(int prot);
+std::string mmap_flags_string(int flags);
+
 } // namespace utils
 
 #endif /* HEAPTRACE_UTILS_H */

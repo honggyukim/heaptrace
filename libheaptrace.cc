@@ -18,6 +18,7 @@
 #include "compiler.h"
 #include "stacktrace.h"
 #include "sighandler.h"
+#include "utils.h"
 
 // dlsym internally uses calloc, so use weak symbol to get their symbol
 extern "C" __weak void* __libc_malloc(size_t size);
@@ -334,9 +335,12 @@ void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 	tfs->hook_guard = true;
 
 	void* p = real_mmap(addr, length, prot, flags, fd, offset);
-	pr_dbg("mmap(%p, %zd, %#x, %#x, %d, %ld) = %p\n", addr, length, prot, flags, fd, offset, p);
 	if (p != MAP_FAILED)
 		record_backtrace(length, p);
+
+	pr_dbg("mmap(%p, %zd, %s, %s, %d, %ld) = %p\n", addr, length,
+		utils::mmap_prot_string(prot).c_str(),
+		utils::mmap_flags_string(flags).c_str(), fd, offset, p);
 
 	tfs->hook_guard = false;
 
@@ -357,9 +361,10 @@ int munmap(void *addr, size_t length)
 	tfs->hook_guard = true;
 
 	int ret = real_munmap(addr, length);
-	pr_dbg("munmap(%p, %zd) = %d\n", addr, length, ret);
 	if (ret != -1)
 		release_backtrace(addr);
+
+	pr_dbg("munmap(%p, %zd) = %d\n", addr, length, ret);
 
 	tfs->hook_guard = false;
 
