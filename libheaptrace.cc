@@ -125,6 +125,82 @@ static void heaptrace_fini()
 	tfs->hook_guard = true;
 }
 
+__visible_default
+void* operator new(size_t size)
+{
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
+		return __libc_malloc(size);
+
+	tfs->hook_guard = true;
+
+	void* p = real_malloc(size);
+	pr_dbg("operator new(%zd) = %p\n", size, p);
+	record_backtrace(size, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
+
+__visible_default
+void* operator new[](size_t size)
+{
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !tfs->initialized))
+		return __libc_malloc(size);
+
+	tfs->hook_guard = true;
+
+	void* p = real_malloc(size);
+	pr_dbg("operator new[](%zd) = %p\n", size, p);
+	record_backtrace(size, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
+
+__visible_default
+void operator delete(void *ptr)
+{
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !tfs->initialized)) {
+		__libc_free(ptr);
+		return;
+	}
+
+	tfs->hook_guard = true;
+
+	pr_dbg("operator delete(%p)\n", ptr);
+	release_backtrace(ptr);
+	real_free(ptr);
+
+	tfs->hook_guard = false;
+}
+
+__visible_default
+void operator delete[](void *ptr)
+{
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !tfs->initialized)) {
+		__libc_free(ptr);
+		return;
+	}
+
+	tfs->hook_guard = true;
+
+	pr_dbg("operator delete[](%p)\n", ptr);
+	release_backtrace(ptr);
+	real_free(ptr);
+
+	tfs->hook_guard = false;
+}
+
 extern "C" __visible_default
 void* malloc(size_t size)
 {
