@@ -49,10 +49,12 @@ status when program is finished.  If every memory allocation is properly
 deallocated, then it doesn't print anything.
 
 There are some options as follows:
-- `--sort` option is to set the sort order to show.  Its value can be either
-  "size" or "count" and its default value is "size".
-- `--top` option is to set the number of backtraces to show and its default
-  value is 10.
+```
+      --flame-graph          Print heap trace info in flamegraph format
+      --outfile=FILE         Save log messages to this file
+  -s, --sort=KEY             Sort backtraces based on KEY (size or count)
+      --top=NUM              Set number of top backtraces to show (default 10)
+```
 
 Here is an example usage of heaptrace.  It traces memory allocation of the
 target program `node`, then prints currently live allocation info based on
