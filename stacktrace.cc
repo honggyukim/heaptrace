@@ -298,6 +298,8 @@ static void print_dump_stackmap(const time_point_t& current, struct mallinfo& in
 	pr_out("[heaptrace] statm info (VSS/RSS/shared)  : %s\n",
 		read_statm().c_str());
 	pr_out("=================================================================\n");
+
+	fflush(outfp);
 }
 
 static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
@@ -320,6 +322,8 @@ static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, 
 		}
 		pr_out(" %" PRIu64 "\n", size);
 	}
+
+	fflush(outfp);
 }
 
 void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
