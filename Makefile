@@ -7,9 +7,11 @@ endif
 prefix ?= /usr
 DESTDIR := $(prefix)
 
-$(call allow-override,CC,$(CROSS_COMPILE)gcc)
-$(call allow-override,AR,$(CROSS_COMPILE)ar)
-$(call allow-override,LD,$(CROSS_COMPILE)ld)
+ifdef CROSS_COMPILE
+  CXX := $(CROSS_COMPILE)g++
+else
+  CXX ?= g++
+endif
 
 CXXFLAGS := -std=c++11
 ifeq ($(DEBUG), 1)
