@@ -1,8 +1,12 @@
 # Copyright (c) 2022 LG Electronics Inc.
 # SPDX-License-Identifier: GPL-2.0
-$(call allow-override,CC,$(CROSS_COMPILE)gcc)
-$(call allow-override,AR,$(CROSS_COMPILE)ar)
-$(call allow-override,LD,$(CROSS_COMPILE)ld)
+ifdef CROSS_COMPILE
+  CC  := $(CROSS_COMPILE)gcc
+  CXX := $(CROSS_COMPILE)g++
+else
+  CC  ?= gcc
+  CXX ?= g++
+endif
 
 CFLAGS   := -rdynamic -funwind-tables
 CXXFLAGS := $(CFLAGS)

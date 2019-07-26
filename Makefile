@@ -8,8 +8,10 @@ prefix ?= /usr
 DESTDIR := $(prefix)
 
 ifdef CROSS_COMPILE
+  CC  := $(CROSS_COMPILE)gcc
   CXX := $(CROSS_COMPILE)g++
 else
+  CC  ?= gcc
   CXX ?= g++
 endif
 
