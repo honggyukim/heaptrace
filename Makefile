@@ -65,6 +65,7 @@ libheaptrace.so: $(LIB_OBJS)
 	$(QUIET_LINK)$(CXX) -shared -o $@ $^ $(LIB_LDFLAGS)
 
 install: all
+	mkdir -p $(DESTDIR)/bin $(DESTDIR)/lib
 	install -m 755 heaptrace $(DESTDIR)/bin/heaptrace
 	install -m 755 libheaptrace.so $(DESTDIR)/lib/libheaptrace.so
 
