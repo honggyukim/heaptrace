@@ -27,8 +27,6 @@ extern "C" __weak void* __libc_calloc(size_t nmemb, size_t size);
 extern "C" __weak void* __libc_realloc(void *ptr, size_t size);
 extern "C" __weak void* __libc_memalign(size_t alignment, size_t size);
 extern "C" __weak int   __posix_memalign(void **memptr, size_t alignment, size_t size);
-extern "C" __weak void* __mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
-extern "C" __weak int   __munmap(void *addr, size_t len);
 
 typedef void* (*MallocFunction)(size_t size);
 typedef void  (*FreeFunction)(void *ptr);
@@ -45,8 +43,6 @@ static CallocFunction        real_calloc;
 static ReallocFunction       real_realloc;
 static MemalignFunction      real_memalign;
 static PosixMemalignFunction real_posix_memalign;
-static MmapFunction          real_mmap;
-static MunmapFunction        real_munmap;
 
 thread_local struct thread_flags_t thread_flags;
 
@@ -68,8 +64,6 @@ static void heaptrace_init()
 	real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
 	real_memalign = (MemalignFunction)dlsym(RTLD_NEXT, "memalign");
 	real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
-	real_mmap = (MmapFunction)dlsym(RTLD_NEXT, "mmap");
-	real_munmap = (MunmapFunction)dlsym(RTLD_NEXT, "munmap");
 
 	sigusr1.sa_handler = sigusr1_handler;
 	sigemptyset(&sigusr1.sa_mask);
@@ -321,52 +315,3 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 	return ret;
 }
 
-extern "C" __visible_default
-void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
-{
-	auto *tfs = &thread_flags;
-
-	if (unlikely(!real_mmap))
-		real_mmap = (MmapFunction)dlsym(RTLD_NEXT, "mmap");
-
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
-		return real_mmap(addr, length, prot, flags, fd, offset);
-
-	tfs->hook_guard = true;
-
-	void* p = real_mmap(addr, length, prot, flags, fd, offset);
-	if (p != MAP_FAILED)
-		record_backtrace(length, p);
-
-	pr_dbg("mmap(%p, %zd, %s, %s, %d, %ld) = %p\n", addr, length,
-		utils::mmap_prot_string(prot).c_str(),
-		utils::mmap_flags_string(flags).c_str(), fd, offset, p);
-
-	tfs->hook_guard = false;
-
-	return p;
-}
-
-extern "C" __visible_default
-int munmap(void *addr, size_t length)
-{
-	auto *tfs = &thread_flags;
-
-	if (unlikely(!real_munmap))
-		real_munmap = (MunmapFunction)dlsym(RTLD_NEXT, "munmap");
-
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
-		return real_munmap(addr, length);
-
-	tfs->hook_guard = true;
-
-	int ret = real_munmap(addr, length);
-	if (ret != -1)
-		release_backtrace(addr);
-
-	pr_dbg("munmap(%p, %zd) = %d\n", addr, length, ret);
-
-	tfs->hook_guard = false;
-
-	return ret;
-}
