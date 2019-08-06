@@ -246,19 +246,11 @@ static void print_dump_stackmap(const time_point_t& current, struct mallinfo& in
 {
 	int cnt = 0;
 	uint64_t total_size = 0;
-	std::stringstream ss;
 	int tid = utils::gettid();
 
-	ss << "/proc/" << tid << "/comm";
-
-	std::string file_comm = ss.str();
-	std::ifstream fs(file_comm);
-	std::string comm;
-
-	fs >> comm;
 	pr_out("=================================================================\n");
 	pr_out("[heaptrace] dump allocation status for /proc/%d/maps (%s)\n",
-		tid, comm.c_str());
+		tid, utils::get_comm_name().c_str());
 
 	size_t stack_size = sorted_stack.size();
 	for (int i = 0; i < stack_size; i++) {
