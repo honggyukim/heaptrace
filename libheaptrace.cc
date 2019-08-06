@@ -87,7 +87,8 @@ static void heaptrace_init()
 
 	opts.outfile = getenv("HEAPTRACE_OUTFILE");
 	if (opts.outfile) {
-		ss << opts.outfile << "." << pid;
+		ss << opts.outfile << "." << pid
+				   << "." << comm.c_str();
 		outfp = fopen(ss.str().c_str(), "w");
 	}
 	else
