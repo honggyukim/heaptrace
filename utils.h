@@ -29,6 +29,8 @@ static int gettid(void)
 
 std::string asprintf(const char* fmt, ...);
 
+std::string get_comm_name(void);
+
 struct enum_table {
 	const char *str;
 	int val;

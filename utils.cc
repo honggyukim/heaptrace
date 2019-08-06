@@ -5,6 +5,8 @@
 #include <cstdarg>
 
 #include <string>
+#include <sstream>
+#include <fstream>
 
 #include "utils.h"
 
@@ -23,6 +25,20 @@ std::string asprintf(const char* fmt, ...)
 	free(ptr);
 	va_end(args);
 	return str;
+}
+
+std::string get_comm_name(void)
+{
+	std::string comm;
+	std::stringstream ss;
+	int tid = utils::gettid();
+
+	ss << "/proc/" << tid << "/comm";
+
+	std::ifstream fs(ss.str());
+	fs >> comm;
+
+	return comm;
 }
 
 static enum_table ht_mmap_prot[] = {
