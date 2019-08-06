@@ -57,6 +57,7 @@ static void heaptrace_init()
 	struct sigaction sigusr1, sigusr2;
 	int pid = getpid();
 	std::stringstream ss;
+	std::string comm = utils::get_comm_name();
 
 	real_malloc = (MallocFunction)dlsym(RTLD_NEXT, "malloc");
 	real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
@@ -92,8 +93,10 @@ static void heaptrace_init()
 	else
 		outfp = stdout;
 
-	if (!opts.flamegraph)
-		pr_out("[heaptrace] initialized for /proc/%d/maps\n", pid);
+	if (!opts.flamegraph) {
+		pr_out("[heaptrace] initialized for /proc/%d/maps (%s)\n",
+			pid, comm.c_str());
+	}
 
 	tfs->initialized = true;
 }
@@ -104,9 +107,12 @@ static void heaptrace_fini()
 	auto* tfs = &thread_flags;
 	int pid = getpid();
 	enum alloc_sort_order order = ALLOC_SIZE;
+	std::string comm = utils::get_comm_name();
 
-	if (!opts.flamegraph)
-		pr_out("[heaptrace] finalized for /proc/%d/maps\n", pid);
+	if (!opts.flamegraph) {
+		pr_out("[heaptrace]   finalized for /proc/%d/maps (%s)\n",
+			pid, comm.c_str());
+	}
 
 	if (!strcmp(opts.sortkey, "count"))
 		order = ALLOC_COUNT;
