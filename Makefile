@@ -1,14 +1,24 @@
 # Copyright (c) 2022 LG Electronics Inc.
 # SPDX-License-Identifier: GPL-2.0
-ifneq ($(wildcard .config),)
-  include .config
+prefix ?= /usr/local
+bindir = $(prefix)/bin
+libdir = $(prefix)/lib
+
+srcdir = $(CURDIR)
+# set objdir to $(O) by default (if any)
+ifeq ($(objdir),)
+    ifneq ($(O),)
+        objdir = $(O)
+    else
+        objdir = $(CURDIR)
+    endif
 endif
 
-prefix ?= /usr
-DESTDIR := $(prefix)
+ifneq ($(wildcard $(objdir)/.config),)
+  include $(objdir)/.config
+endif
 
-srcdir ?= $(CURDIR)
-objdir ?= $(CURDIR)
+export CC CXX LD srcdir objdir LDFLAGS
 
 ifdef CROSS_COMPILE
   CC  := $(CROSS_COMPILE)gcc
@@ -67,14 +77,14 @@ libheaptrace.so: $(LIB_OBJS)
 	$(QUIET_LINK)$(CXX) -shared -o $(objdir)/$@ $^ $(LIB_LDFLAGS)
 
 install: all
-	mkdir -p $(DESTDIR)/bin $(DESTDIR)/lib
-	install -m 755 heaptrace $(DESTDIR)/bin/heaptrace
-	install -m 755 libheaptrace.so $(DESTDIR)/lib/libheaptrace.so
+	mkdir -p $(DESTDIR)$(bindir) $(DESTDIR)$(libdir)
+	install -m 755 $(objdir)/heaptrace $(DESTDIR)$(bindir)/heaptrace
+	install -m 755 $(objdir)/libheaptrace.so $(DESTDIR)$(libdir)/libheaptrace.so
 
 uninstall:
-	rm -f $(DESTDIR)/bin/heaptrace
-	rm -f $(DESTDIR)/lib/libheaptrace.so
+	rm -f $(DESTDIR)$(bindir)/heaptrace
+	rm -f $(DESTDIR)$(libdir)/libheaptrace.so
 
 clean:
-	rm -f heaptrace libheaptrace.so $(LIB_OBJS) $(HEAPTRACE_OBJS)
+	rm -f $(objdir)/heaptrace $(objdir)/libheaptrace.so $(LIB_OBJS) $(HEAPTRACE_OBJS)
 	$(MAKE) -C samples clean
