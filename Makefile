@@ -7,6 +7,9 @@ endif
 prefix ?= /usr
 DESTDIR := $(prefix)
 
+srcdir ?= $(CURDIR)
+objdir ?= $(CURDIR)
+
 ifdef CROSS_COMPILE
   CC  := $(CROSS_COMPILE)gcc
   CXX := $(CROSS_COMPILE)g++
@@ -41,28 +44,27 @@ TARGETS := heaptrace libheaptrace.so
 
 # for libheaptrace.so
 LIB_SRCS := libheaptrace.cc stacktrace.cc sighandler.cc utils.cc
-LIB_OBJS := $(patsubst %.cc,%.o,$(LIB_SRCS))
+LIB_OBJS := $(patsubst %.cc,$(objdir)/%.o,$(LIB_SRCS))
 
 # for heaptrace
 HEAPTRACE_SRCS := heaptrace.cc
-HEAPTRACE_OBJS := $(patsubst %.cc,%.o,$(HEAPTRACE_SRCS))
-
+HEAPTRACE_OBJS := $(patsubst %.cc,$(objdir)/%.o,$(HEAPTRACE_SRCS))
 
 # build rule begin
 all: $(TARGETS)
 	$(MAKE) -C samples
 
 heaptrace: $(HEAPTRACE_OBJS)
-	$(QUIET_CXX)$(CXX) $(CXXFLAGS) -o $@ $(HEAPTRACE_OBJS)
+	$(QUIET_CXX)$(CXX) $(CXXFLAGS) -o $(objdir)/$@ $(HEAPTRACE_OBJS)
 
-$(LIB_OBJS): %.o: %.cc
+$(LIB_OBJS): $(objdir)/%.o: $(srcdir)/%.cc
 	$(QUIET_CXX)$(CXX) $(LIB_CXXFLAGS) -c -o $@ $<
 
-$(HEAPTRACE_OBJS): %.o: %.cc
+$(HEAPTRACE_OBJS): $(objdir)/%.o: $(srcdir)/%.cc
 	$(QUIET_CXX)$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 libheaptrace.so: $(LIB_OBJS)
-	$(QUIET_LINK)$(CXX) -shared -o $@ $^ $(LIB_LDFLAGS)
+	$(QUIET_LINK)$(CXX) -shared -o $(objdir)/$@ $^ $(LIB_LDFLAGS)
 
 install: all
 	mkdir -p $(DESTDIR)/bin $(DESTDIR)/lib

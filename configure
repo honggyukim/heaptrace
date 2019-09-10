@@ -1,0 +1,35 @@
+#!/bin/sh
+# Copyright (c) 2022 LG Electronics Inc.
+# SPDX-License-Identifier: GPL-2.0
+
+srcdir=$(readlink -f $(dirname $0))
+objdir=$(readlink -f ${objdir:-${PWD}})
+output=${output:-${objdir}/.config}
+
+# objdir can be changed, reset output
+objdir=$(readlink -f ${objdir})
+
+if [ "$srcdir" != "$objdir" ]; then
+    cat > $objdir/Makefile <<EOF
+srcdir := $srcdir
+objdir := $objdir
+
+export srcdir objdir
+
+MAKEFLAGS = --no-print-directory
+
+all:
+	@\$(MAKE) -C \$(srcdir)
+
+clean:
+	@rm -f heaptrace libheaptrace.so *.o
+
+install:
+	@\$(MAKE) -C \$(srcdir) install
+
+.PHONY: all clean tinstall
+EOF
+    if [ $(id -u) -eq 0 ]; then
+        chmod 666 $objdir/Makefile
+    fi
+fi
