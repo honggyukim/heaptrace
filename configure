@@ -55,7 +55,7 @@ override bindir := $bindir
 override libdir := $libdir
 EOF
 
-cat >$output <<EOF
+cat >>$output <<EOF
 
 override CC     := $CC
 override CXX    := $CXX
