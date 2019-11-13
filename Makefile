@@ -18,7 +18,7 @@ ifneq ($(wildcard $(objdir)/.config),)
   include $(objdir)/.config
 endif
 
-export CC CXX LD srcdir objdir LDFLAGS
+export CC CXX LD srcdir objdir CXXFLAGS LDFLAGS
 
 ifdef CROSS_COMPILE
   CC  := $(CROSS_COMPILE)gcc
@@ -28,15 +28,15 @@ else
   CXX ?= g++
 endif
 
-CXXFLAGS := -std=c++11
+COMMON_CXXFLAGS = $(CXXFLAGS) -std=c++11
 ifeq ($(DEBUG), 1)
-  CXXFLAGS += -O0 -g
+  COMMON_CXXFLAGS += -O0 -g
 else
-  CXXFLAGS += -O2 -g
+  COMMON_CXXFLAGS += -O2 -g
 endif
 
-LIB_CXXFLAGS := $(CXXFLAGS) -fPIC -fno-omit-frame-pointer -fvisibility=hidden
-LIB_LDFLAGS  := -ldl
+LIB_CXXFLAGS := $(COMMON_CXXFLAGS) -fPIC -fno-omit-frame-pointer -fvisibility=hidden
+LIB_LDFLAGS  := $(LDFLAGS) -ldl
 
 ifndef $(DEPTH)
 # default backtrace depth is 8
@@ -45,9 +45,9 @@ endif
 LIB_CXXFLAGS += -DDEPTH=$(DEPTH)
 
 ifeq ($(M32), 1)
-  CXXFLAGS     += -m32
-  LIB_CXXFLAGS += -m32
-  LIB_LDFLAGS  += -m32
+  COMMON_CXXFLAGS += -m32
+  LIB_CXXFLAGS    += -m32
+  LIB_LDFLAGS     += -m32
 endif
 
 TARGETS := heaptrace libheaptrace.so
@@ -65,13 +65,13 @@ all: $(TARGETS)
 	$(MAKE) -C samples
 
 heaptrace: $(HEAPTRACE_OBJS)
-	$(QUIET_CXX)$(CXX) $(CXXFLAGS) -o $(objdir)/$@ $(HEAPTRACE_OBJS)
+	$(QUIET_CXX)$(CXX) $(COMMON_CXXFLAGS) -o $(objdir)/$@ $(HEAPTRACE_OBJS)
 
 $(LIB_OBJS): $(objdir)/%.o: $(srcdir)/%.cc
 	$(QUIET_CXX)$(CXX) $(LIB_CXXFLAGS) -c -o $@ $<
 
 $(HEAPTRACE_OBJS): $(objdir)/%.o: $(srcdir)/%.cc
-	$(QUIET_CXX)$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(QUIET_CXX)$(CXX) $(COMMON_CXXFLAGS) -c -o $@ $<
 
 libheaptrace.so: $(LIB_OBJS)
 	$(QUIET_LINK)$(CXX) -shared -o $(objdir)/$@ $^ $(LIB_LDFLAGS)

@@ -57,15 +57,15 @@ EOF
 
 cat >>$output <<EOF
 
-override CC     := $CC
-override CXX    := $CXX
-override LD     := $LD
-override CFLAGS  = $CFLAGS
-override CXXLAGS = $CXXLAGS
-override LDFLAGS = $LDFLAGS
+override CC      := $CC
+override CXX     := $CXX
+override LD      := $LD
+override CFLAGS   = $CFLAGS
+override CXXFLAGS = $CXXFLAGS
+override LDFLAGS  = $LDFLAGS
 
-override srcdir := $srcdir
-override objdir := $objdir
+override srcdir  := $srcdir
+override objdir  := $objdir
 EOF
 
 if [ "$srcdir" != "$objdir" ]; then
