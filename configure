@@ -4,6 +4,10 @@
 
 prefix=/usr/local
 
+CC=${CC:-${CROSS_COMPILE}gcc}
+CXX=${CXX:-${CROSS_COMPILE}g++}
+LD=${LD:-${CROSS_COMPILE}ld}
+
 srcdir=$(readlink -f $(dirname $0))
 objdir=$(readlink -f ${objdir:-${PWD}})
 output=${output:-${objdir}/.config}
