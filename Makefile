@@ -28,7 +28,7 @@ else
   CXX ?= g++
 endif
 
-COMMON_CXXFLAGS = $(CXXFLAGS) -std=c++11
+COMMON_CXXFLAGS = $(CXXFLAGS) -std=c++11 -Wno-psabi
 ifeq ($(DEBUG), 1)
   COMMON_CXXFLAGS += -O0 -g
 else
