@@ -29,13 +29,13 @@
 std::map<stack_trace_t, stack_info_t> stackmap;
 std::map<addr_t, object_info_t> addrmap;
 
-std::mutex container_mutex;
+std::recursive_mutex container_mutex;
 
 // record_backtrace() is defined in stacktrace.h as an inline function.
 void __record_backtrace(size_t size, void* addr,
 			       stack_trace_t& stack_trace, int nptrs)
 {
-	std::lock_guard<std::mutex> lock(container_mutex);
+	std::lock_guard<std::recursive_mutex> lock(container_mutex);
 
 	pr_dbg("  record_backtrace(%zd, %p)\n", size, addr);
 
@@ -64,7 +64,7 @@ void release_backtrace(void* addr)
 	if (unlikely(!addr))
 		return;
 
-	std::lock_guard<std::mutex> lock(container_mutex);
+	std::lock_guard<std::recursive_mutex> lock(container_mutex);
 
 	pr_dbg("  release_backtrace(%p)\n", addr);
 
@@ -340,7 +340,7 @@ void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
 	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
 	{
 		// protect stackmap access
-		std::lock_guard<std::mutex> lock(container_mutex);
+		std::lock_guard<std::recursive_mutex> lock(container_mutex);
 
 		for (auto& p : stackmap)
 			sorted_stack.push_back(make_pair(p.first, p.second));
