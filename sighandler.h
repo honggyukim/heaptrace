@@ -5,5 +5,6 @@
 
 void sigusr1_handler(int signo);
 void sigusr2_handler(int signo);
+void sigquit_handler(int signo);
 
 #endif /* HEAPTOP_SIGHANDLER_H */

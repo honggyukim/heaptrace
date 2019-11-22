@@ -60,4 +60,6 @@ void release_backtrace(void* addr);
 
 void dump_stackmap(enum alloc_sort_order order, bool flamegraph = false);
 
+void clear_stackmap(void);
+
 #endif /* HEAPTRACE_STACKTRACE_H */

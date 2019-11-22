@@ -369,3 +369,11 @@ void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
 
 	tfs->hook_guard = false;
 }
+
+void clear_stackmap(void)
+{
+	std::lock_guard<std::recursive_mutex> lock(container_mutex);
+
+	stackmap.clear();
+	addrmap.clear();
+}

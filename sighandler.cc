@@ -16,3 +16,9 @@ void sigusr2_handler(int signo)
 	pr_dbg("\n=== sigusr2_handler(%d) ===\n", signo);
 	dump_stackmap(ALLOC_COUNT, opts.flamegraph);
 }
+
+void sigquit_handler(int signo)
+{
+	pr_dbg("\n=== sigquit_handler(%d) ===\n", signo);
+	clear_stackmap();
+}

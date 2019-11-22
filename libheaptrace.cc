@@ -54,7 +54,7 @@ __constructor
 static void heaptrace_init()
 {
 	auto* tfs = &thread_flags;
-	struct sigaction sigusr1, sigusr2;
+	struct sigaction sigusr1, sigusr2, sigquit;
 	int pid = getpid();
 	std::stringstream ss;
 	std::string comm = utils::get_comm_name();
@@ -74,11 +74,18 @@ static void heaptrace_init()
 	sigemptyset(&sigusr2.sa_mask);
 	sigusr2.sa_flags = 0;
 
+	sigquit.sa_handler = sigquit_handler;
+	sigemptyset(&sigquit.sa_mask);
+	sigquit.sa_flags = 0;
+
 	if (sigaction(SIGUSR1, &sigusr1, 0) == -1)
 		pr_dbg("signal(SIGUSR1) error");
 
 	if (sigaction(SIGUSR2, &sigusr2, 0) == -1)
 		pr_dbg("signal(SIGUSR2) error");
+
+	if (sigaction(SIGQUIT, &sigquit, 0) == -1)
+		pr_dbg("signal(SIGQUIT) error");
 
 	// setup option values
 	opts.top = strtol(getenv("HEAPTRACE_NUM_TOP_BACKTRACE"), NULL, 0);
