@@ -31,9 +31,6 @@ extern FILE *outfp;
 struct thread_flags_t {
 	// to protect unexpected recursive malloc calls
 	bool hook_guard;
-
-	// true only when heaptrace_init is done
-	bool initialized;
 };
 extern thread_local struct thread_flags_t thread_flags;
 

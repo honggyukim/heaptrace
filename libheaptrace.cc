@@ -46,6 +46,9 @@ static PosixMemalignFunction real_posix_memalign;
 
 thread_local struct thread_flags_t thread_flags;
 
+// true only when heaptrace_init is done
+static bool initialized;
+
 struct opts opts;
 
 FILE *outfp;
@@ -106,7 +109,7 @@ static void heaptrace_init()
 			pid, comm.c_str());
 	}
 
-	tfs->initialized = true;
+	initialized = true;
 }
 
 __destructor
@@ -139,7 +142,7 @@ void* operator new(size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
+	if (unlikely(tfs->hook_guard || !initialized))
 		return __libc_malloc(size);
 
 	tfs->hook_guard = true;
@@ -158,7 +161,7 @@ void* operator new[](size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
+	if (unlikely(tfs->hook_guard || !initialized))
 		return __libc_malloc(size);
 
 	tfs->hook_guard = true;
@@ -177,7 +180,7 @@ void operator delete(void *ptr)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized)) {
+	if (unlikely(tfs->hook_guard || !initialized)) {
 		__libc_free(ptr);
 		return;
 	}
@@ -196,7 +199,7 @@ void operator delete[](void *ptr)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized)) {
+	if (unlikely(tfs->hook_guard || !initialized)) {
 		__libc_free(ptr);
 		return;
 	}
@@ -215,7 +218,7 @@ void* malloc(size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
+	if (unlikely(tfs->hook_guard || !initialized))
 		return __libc_malloc(size);
 
 	tfs->hook_guard = true;
@@ -234,7 +237,7 @@ void free(void *ptr)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized)) {
+	if (unlikely(tfs->hook_guard || !initialized)) {
 		__libc_free(ptr);
 		return;
 	}
@@ -253,7 +256,7 @@ void *calloc(size_t nmemb, size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
+	if (unlikely(tfs->hook_guard || !initialized))
 		return __libc_calloc(nmemb, size);
 
 	tfs->hook_guard = true;
@@ -272,7 +275,7 @@ void *realloc(void *ptr, size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
+	if (unlikely(tfs->hook_guard || !initialized))
 		return __libc_realloc(ptr, size);
 
 	tfs->hook_guard = true;
@@ -292,7 +295,7 @@ void *memalign(size_t alignment, size_t size)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
+	if (unlikely(tfs->hook_guard || !initialized))
 		return __libc_memalign(alignment, size);
 
 	tfs->hook_guard = true;
@@ -314,7 +317,7 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 	if (unlikely(!real_posix_memalign))
 		real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
 
-	if (unlikely(tfs->hook_guard || !tfs->initialized))
+	if (unlikely(tfs->hook_guard || !initialized))
 		return real_posix_memalign(memptr, alignment, size);
 
 	tfs->hook_guard = true;
