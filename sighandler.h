@@ -3,8 +3,6 @@
 #ifndef HEAPTOP_SIGHANDLER_H
 #define HEAPTOP_SIGHANDLER_H
 
-void sigusr1_handler(int signo);
-void sigusr2_handler(int signo);
-void sigquit_handler(int signo);
+void sighandler_init(void);
 
 #endif /* HEAPTOP_SIGHANDLER_H */
