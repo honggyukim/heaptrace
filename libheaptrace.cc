@@ -27,6 +27,7 @@ extern "C" __weak void* __libc_calloc(size_t nmemb, size_t size);
 extern "C" __weak void* __libc_realloc(void *ptr, size_t size);
 extern "C" __weak void* __libc_memalign(size_t alignment, size_t size);
 extern "C" __weak int   __posix_memalign(void **memptr, size_t alignment, size_t size);
+extern "C" __weak void* __aligned_alloc(size_t alignment, size_t size);
 
 typedef void* (*MallocFunction)(size_t size);
 typedef void  (*FreeFunction)(void *ptr);
@@ -34,6 +35,7 @@ typedef void* (*CallocFunction)(size_t nmemb, size_t size);
 typedef void* (*ReallocFunction)(void *ptr, size_t size);
 typedef void* (*MemalignFunction)(size_t alignment, size_t size);
 typedef int   (*PosixMemalignFunction)(void **memptr, size_t alignment, size_t size);
+typedef void* (*AlignedAllocFunction)(size_t alignment, size_t size);
 typedef void* (*MmapFunction)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
 typedef int   (*MunmapFunction)(void *addr, size_t length);
 
@@ -43,6 +45,7 @@ static CallocFunction        real_calloc;
 static ReallocFunction       real_realloc;
 static MemalignFunction      real_memalign;
 static PosixMemalignFunction real_posix_memalign;
+static AlignedAllocFunction  real_aligned_alloc;
 
 thread_local struct thread_flags_t thread_flags;
 
@@ -67,6 +70,7 @@ static void heaptrace_init()
 	real_realloc = (ReallocFunction)dlsym(RTLD_NEXT, "realloc");
 	real_memalign = (MemalignFunction)dlsym(RTLD_NEXT, "memalign");
 	real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
+	real_aligned_alloc = (AlignedAllocFunction)dlsym(RTLD_NEXT, "aligned_alloc");
 
 	// initialize signal handlers
 	sighandler_init();
@@ -313,3 +317,21 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 	return ret;
 }
 
+extern "C" __visible_default
+void *aligned_alloc(size_t alignment, size_t size)
+{
+	auto *tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !initialized))
+		return __aligned_alloc(alignment, size);
+
+	tfs->hook_guard = true;
+
+	void *p = real_aligned_alloc(alignment, size);
+	pr_dbg("aligned_alloc(%zd, %zd) = %p\n", alignment, size, p);
+	record_backtrace(size, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
