@@ -28,6 +28,8 @@ extern "C" __weak void* __libc_realloc(void *ptr, size_t size);
 extern "C" __weak void* __libc_memalign(size_t alignment, size_t size);
 extern "C" __weak int   __posix_memalign(void **memptr, size_t alignment, size_t size);
 extern "C" __weak void* __aligned_alloc(size_t alignment, size_t size);
+extern "C" __weak void* __pvalloc(size_t size);
+extern "C" __weak void* __valloc(size_t size);
 
 typedef void* (*MallocFunction)(size_t size);
 typedef void  (*FreeFunction)(void *ptr);
@@ -36,6 +38,8 @@ typedef void* (*ReallocFunction)(void *ptr, size_t size);
 typedef void* (*MemalignFunction)(size_t alignment, size_t size);
 typedef int   (*PosixMemalignFunction)(void **memptr, size_t alignment, size_t size);
 typedef void* (*AlignedAllocFunction)(size_t alignment, size_t size);
+typedef void* (*PVallocFunction)(size_t size);
+typedef void* (*VallocFunction)(size_t size);
 typedef void* (*MmapFunction)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
 typedef int   (*MunmapFunction)(void *addr, size_t length);
 
@@ -46,6 +50,8 @@ static ReallocFunction       real_realloc;
 static MemalignFunction      real_memalign;
 static PosixMemalignFunction real_posix_memalign;
 static AlignedAllocFunction  real_aligned_alloc;
+static PVallocFunction       real_pvalloc;
+static VallocFunction        real_valloc;
 
 thread_local struct thread_flags_t thread_flags;
 
@@ -71,6 +77,8 @@ static void heaptrace_init()
 	real_memalign = (MemalignFunction)dlsym(RTLD_NEXT, "memalign");
 	real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
 	real_aligned_alloc = (AlignedAllocFunction)dlsym(RTLD_NEXT, "aligned_alloc");
+	real_pvalloc = (PVallocFunction)dlsym(RTLD_NEXT, "pvalloc");
+	real_valloc = (VallocFunction)dlsym(RTLD_NEXT, "valloc");
 
 	// initialize signal handlers
 	sighandler_init();
@@ -329,6 +337,44 @@ void *aligned_alloc(size_t alignment, size_t size)
 
 	void *p = real_aligned_alloc(alignment, size);
 	pr_dbg("aligned_alloc(%zd, %zd) = %p\n", alignment, size, p);
+	record_backtrace(size, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
+
+extern "C" __visible_default
+void *pvalloc(size_t size)
+{
+	auto *tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !initialized))
+		return __pvalloc(size);
+
+	tfs->hook_guard = true;
+
+	void *p = real_pvalloc(size);
+	pr_dbg("pvalloc(%zd) = %p\n", size, p);
+	record_backtrace(size, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
+
+extern "C" __visible_default
+void *valloc(size_t size)
+{
+	auto *tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !initialized))
+		return __valloc(size);
+
+	tfs->hook_guard = true;
+
+	void *p = real_valloc(size);
+	pr_dbg("valloc(%zd) = %p\n", size, p);
 	record_backtrace(size, p);
 
 	tfs->hook_guard = false;
