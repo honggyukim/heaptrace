@@ -83,9 +83,8 @@ void release_backtrace(void* addr)
 	stack_info.total_size -= object_info.size;
 	stack_info.count--;
 	if (stack_info.count == 0) {
-		const auto& it = stackmap.find(stack_trace);
-		if (it != stackmap.end())
-			stackmap.erase(it);
+		// The stackmap for the given stacktrace is no longer needed.
+		stackmap.erase(stackit);
 	}
 }
 
