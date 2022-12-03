@@ -3,31 +3,31 @@
 #ifndef HEAPTRACE_UTILS_H
 #define HEAPTRACE_UTILS_H
 
-#include <cstdio>
 #include <cstdarg>
-#include <unistd.h>
+#include <cstdio>
 #include <sys/syscall.h>
+#include <unistd.h>
 
-#include <string>
 #include <chrono>
+#include <string>
 
 #ifndef _GNU_SOURCE
-# define _GNU_SOURCE
+#define _GNU_SOURCE
 #endif
 
 namespace utils {
 
-typedef std::chrono::duration<uint64_t>             bytes;
-typedef std::chrono::duration<uint64_t, std::kilo>  kilobytes;
-typedef std::chrono::duration<uint64_t, std::mega>  megabytes;
-typedef std::chrono::duration<uint64_t, std::giga>  gigabytes;
+typedef std::chrono::duration<uint64_t> bytes;
+typedef std::chrono::duration<uint64_t, std::kilo> kilobytes;
+typedef std::chrono::duration<uint64_t, std::mega> megabytes;
+typedef std::chrono::duration<uint64_t, std::giga> gigabytes;
 
 static int gettid(void)
 {
 	return syscall(SYS_gettid);
 }
 
-std::string asprintf(const char* fmt, ...);
+std::string asprintf(const char *fmt, ...);
 
 std::string get_comm_name(void);
 

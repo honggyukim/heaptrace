@@ -1,18 +1,18 @@
 /* Copyright (c) 2022 LG Electronics Inc. */
 /* SPDX-License-Identifier: GPL-2.0 */
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdarg>
 
-#include <string>
-#include <sstream>
 #include <fstream>
+#include <sstream>
+#include <string>
 
 #include "utils.h"
 
 namespace utils {
 
-std::string asprintf(const char* fmt, ...)
+std::string asprintf(const char *fmt, ...)
 {
 	va_list args;
 	std::string str;
@@ -41,30 +41,20 @@ std::string get_comm_name(void)
 	return comm;
 }
 
-static enum_table ht_mmap_prot[] = {
-	{ "PROT_NONE",  0 },
-	{ "PROT_READ",  1 },
-	{ "PROT_WRITE", 2 },
-	{ "PROT_EXEC",  4 }
-};
+static enum_table ht_mmap_prot[] = { { "PROT_NONE", 0 },
+				     { "PROT_READ", 1 },
+				     { "PROT_WRITE", 2 },
+				     { "PROT_EXEC", 4 } };
 
-static enum_table ht_mmap_flags[] = {
-	{ "MAP_SHARED",     0x1     },
-	{ "MAP_PRIVATE",    0x2     },
-	{ "MAP_FIXED",      0x10    },
-	{ "MAP_ANON",       0x20    },
-	{ "MAP_GROWSDOWN",  0x100   },
-	{ "MAP_DENYWRITE",  0x800   },
-	{ "MAP_EXECUTABLE", 0x1000  },
-	{ "MAP_LOCKED",     0x2000  },
-	{ "MAP_NORESERVE",  0x4000  },
-	{ "MAP_POPULATE",   0x8000  },
-	{ "MAP_NONBLOCK",   0x10000 },
-	{ "MAP_STACK",      0x20000 },
-	{ "MAP_HUGETLB",    0x40000 }
-};
+static enum_table ht_mmap_flags[] = { { "MAP_SHARED", 0x1 },	    { "MAP_PRIVATE", 0x2 },
+				      { "MAP_FIXED", 0x10 },	    { "MAP_ANON", 0x20 },
+				      { "MAP_GROWSDOWN", 0x100 },   { "MAP_DENYWRITE", 0x800 },
+				      { "MAP_EXECUTABLE", 0x1000 }, { "MAP_LOCKED", 0x2000 },
+				      { "MAP_NORESERVE", 0x4000 },  { "MAP_POPULATE", 0x8000 },
+				      { "MAP_NONBLOCK", 0x10000 },  { "MAP_STACK", 0x20000 },
+				      { "MAP_HUGETLB", 0x40000 } };
 
-static std::string mmap_string(int val, const struct enum_table* et, int len)
+static std::string mmap_string(int val, const struct enum_table *et, int len)
 {
 	std::string str;
 
