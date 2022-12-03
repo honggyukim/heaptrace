@@ -38,7 +38,7 @@ Then heaptrace keeps maximum 30 of backtrace depth when tracing.
 
 How to use heaptrace
 ====================
-It provides a convenience wrapper program instread of using LD_PRELOAD
+It provides a convenience wrapper program instead of using LD_PRELOAD
 explicitly as follows:
 ```
 $ heaptrace [<program>]
@@ -70,7 +70,7 @@ $ heaptrace --top 3 --sort count /usr/bin/node --expose-gc -e 'gc()'
  0 [0x7fe72e46476c] malloc +0x1b
  1 [0x7fe72dd61e78] operator new(unsigned long) +0x6
  2 [      0xf27811] /usr/bin/node (+0xf27811)
- 3 [      0xf2e57d] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointer(v8::internal::Root, char const*, v8::internal::Objec... +0x1b
+ 3 [      0xf2e57d] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointer(v8::internal::Root, char const*, v8::internal::Object... +0x1b
  4 [     0x121c32d] v8::internal::SerializerDeserializer::Iterate(v8::internal::Isolate*, v8::internal::RootVisitor*) +0x47
  5 [      0xf07e45] v8::internal::Heap::IterateStrongRoots(v8::internal::RootVisitor*, v8::internal::VisitMode) +0x91
  6 [      0xf40b6b] v8::internal::MarkCompactCollector::MarkLiveObjects() +0x72
@@ -80,7 +80,7 @@ $ heaptrace --top 3 --sort count /usr/bin/node --expose-gc -e 'gc()'
  0 [0x7fe72e46476c] malloc +0x1b
  1 [0x7fe72dd61e78] operator new(unsigned long) +0x6
  2 [      0xf27811] /usr/bin/node (+0xf27811)
- 3 [      0xf29dd4] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointers(v8::internal::Root, char const*, v8::internal::Obje... +0x29
+ 3 [      0xf29dd4] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointers(v8::internal::Root, char const*, v8::internal::Object... +0x29
  4 [      0xb27068] v8::internal::HandleScopeImplementer::IterateThis(v8::internal::RootVisitor*) +0x1e
  5 [      0xf07d33] v8::internal::Heap::IterateStrongRoots(v8::internal::RootVisitor*, v8::internal::VisitMode) +0x4c
  6 [      0xf40b6b] v8::internal::MarkCompactCollector::MarkLiveObjects() +0x72
@@ -90,7 +90,7 @@ $ heaptrace --top 3 --sort count /usr/bin/node --expose-gc -e 'gc()'
  0 [0x7fe72e46476c] malloc +0x1b
  1 [0x7fe72dd61e78] operator new(unsigned long) +0x6
  2 [      0xf27811] /usr/bin/node (+0xf27811)
- 3 [      0xf2e57d] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointer(v8::internal::Root, char const*, v8::internal::Objec... +0x1b
+ 3 [      0xf2e57d] v8::internal::MarkCompactCollector::RootMarkingVisitor::VisitRootPointer(v8::internal::Root, char const*, v8::internal::Object... +0x1b
  4 [      0xf07f08] v8::internal::Heap::IterateStrongRoots(v8::internal::RootVisitor*, v8::internal::VisitMode) +0xc2
  5 [      0xf40b6b] v8::internal::MarkCompactCollector::MarkLiveObjects() +0x72
  6 [      0xf42071] v8::internal::MarkCompactCollector::CollectGarbage() +0x4
