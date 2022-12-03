@@ -2,6 +2,9 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #include <stdlib.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+
 __attribute__((noinline))
 int fac(int n)
 {
@@ -21,3 +24,5 @@ int main()
 	fac(7);
 	return 0;
 }
+
+#pragma GCC diagnostic pop
