@@ -69,14 +69,14 @@ void release_backtrace(void* addr)
 	pr_dbg("  release_backtrace(%p)\n", addr);
 
 	const auto& addrit = addrmap.find(addr);
-	if (addrit == addrmap.end())
+	if (unlikely(addrit == addrmap.end()))
 		return;
 
 	object_info_t& object_info = addrit->second;
 	stack_trace_t& stack_trace = object_info.stack_trace;
 
 	const auto& stackit = stackmap.find(stack_trace);
-	if (stackit == stackmap.end())
+	if (unlikely(stackit == stackmap.end()))
 		return;
 
 	stack_info_t& stack_info = stackit->second;
