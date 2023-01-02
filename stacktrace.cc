@@ -86,6 +86,9 @@ void release_backtrace(void* addr)
 		// The stackmap for the given stacktrace is no longer needed.
 		stackmap.erase(stackit);
 	}
+
+	// The given address is released so remove it from addrmap.
+	addrmap.erase(addrit);
 }
 
 static void print_backtrace_symbol(int count, void *addr)
