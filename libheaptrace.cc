@@ -30,6 +30,7 @@ extern "C" __weak int   __posix_memalign(void **memptr, size_t alignment, size_t
 extern "C" __weak void* __aligned_alloc(size_t alignment, size_t size);
 extern "C" __weak void* __pvalloc(size_t size);
 extern "C" __weak void* __valloc(size_t size);
+extern "C" __weak void* __reallocarray(void* ptr, size_t nmemb, size_t size);
 
 typedef void* (*MallocFunction)(size_t size);
 typedef void  (*FreeFunction)(void *ptr);
@@ -40,6 +41,7 @@ typedef int   (*PosixMemalignFunction)(void **memptr, size_t alignment, size_t s
 typedef void* (*AlignedAllocFunction)(size_t alignment, size_t size);
 typedef void* (*PVallocFunction)(size_t size);
 typedef void* (*VallocFunction)(size_t size);
+typedef void* (*ReallocArrayFunction)(void* ptr, size_t nmemb, size_t size);
 typedef void* (*MmapFunction)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
 typedef int   (*MunmapFunction)(void *addr, size_t length);
 
@@ -52,6 +54,7 @@ static PosixMemalignFunction real_posix_memalign;
 static AlignedAllocFunction  real_aligned_alloc;
 static PVallocFunction       real_pvalloc;
 static VallocFunction        real_valloc;
+static ReallocArrayFunction  real_reallocarray;
 
 thread_local struct thread_flags_t thread_flags;
 
@@ -79,6 +82,7 @@ static void heaptrace_init()
 	real_aligned_alloc = (AlignedAllocFunction)dlsym(RTLD_NEXT, "aligned_alloc");
 	real_pvalloc = (PVallocFunction)dlsym(RTLD_NEXT, "pvalloc");
 	real_valloc = (VallocFunction)dlsym(RTLD_NEXT, "valloc");
+	real_reallocarray = (ReallocArrayFunction)dlsym(RTLD_NEXT, "reallocarray");
 
 	// initialize signal handlers
 	sighandler_init();
@@ -376,6 +380,26 @@ void *valloc(size_t size)
 	void *p = real_valloc(size);
 	pr_dbg("valloc(%zd) = %p\n", size, p);
 	record_backtrace(size, p);
+
+	tfs->hook_guard = false;
+
+	return p;
+}
+
+extern "C" __visible_default
+void *reallocarray(void *ptr, size_t nmemb, size_t size)
+{
+	auto* tfs = &thread_flags;
+
+	if (unlikely(tfs->hook_guard || !initialized))
+		return real_reallocarray(ptr, nmemb, size);
+
+	tfs->hook_guard = true;
+
+	void* p = real_reallocarray(ptr, nmemb, size);
+	pr_dbg("reallocarray(%p, %zd, %zd) = %p\n", ptr, nmemb, size, p);
+	release_backtrace(ptr);
+	record_backtrace(nmemb * size, p);
 
 	tfs->hook_guard = false;
 
