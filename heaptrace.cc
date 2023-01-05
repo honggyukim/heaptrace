@@ -31,7 +31,7 @@ enum options {
 static struct argp_option heaptrace_options[] = {
 	{ "help", 'h', 0, 0, "Give this help list" },
 	{ "top", OPT_top, "NUM", 0, "Set number of top backtraces to show (default 10)" },
-	{ "sort", 's', "KEY", 0, "Sort backtraces based on KEY (size or count)" },
+	{ "sort", 's', "KEYs", 0, "Sort backtraces based on KEYs (size or count)" },
 	{ "flame-graph", OPT_flamegraph, 0, 0, "Print heap trace info in flamegraph format" },
 	{ "outfile", OPT_outfile, "FILE", 0, "Save log messages to this file" },
 	{ 0 }
@@ -51,7 +51,7 @@ static error_t parse_option(int key, char *arg, struct argp_state *state)
 		break;
 
 	case 's':
-		opts->sortkey = arg;
+		opts->sort_keys = arg;
 		break;
 
 	case OPT_flamegraph:
@@ -102,7 +102,7 @@ static void init_options(int argc, char *argv[])
 
 	// set default option values
 	opts.top = 10;
-	opts.sortkey = "size";
+	opts.sort_keys = "size";
 	opts.flamegraph = false;
 
 	argp_parse(&argp, argc, argv, ARGP_IN_ORDER, NULL, &opts);
@@ -129,7 +129,7 @@ static void setup_child_environ(struct opts *opts, int argc, char *argv[])
 	snprintf(buf, sizeof(buf), "%d", opts->top);
 	setenv("HEAPTRACE_NUM_TOP_BACKTRACE", buf, 1);
 
-	setenv("HEAPTRACE_SORTKEY", opts->sortkey, 1);
+	setenv("HEAPTRACE_SORT_KEYS", opts->sort_keys, 1);
 
 	snprintf(buf, sizeof(buf), "%d", opts->flamegraph);
 	setenv("HEAPTRACE_FLAME_GRAPH", buf, 1);

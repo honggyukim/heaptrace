@@ -13,6 +13,7 @@
 #include <sys/mman.h>
 
 #include <sstream>
+#include <string>
 
 #include "heaptrace.h"
 #include "compiler.h"
@@ -89,7 +90,7 @@ static void heaptrace_init()
 
 	// setup option values
 	opts.top = strtol(getenv("HEAPTRACE_NUM_TOP_BACKTRACE"), NULL, 0);
-	opts.sortkey = getenv("HEAPTRACE_SORTKEY");
+	opts.sort_keys = getenv("HEAPTRACE_SORT_KEYS");
 	opts.flamegraph = strtol(getenv("HEAPTRACE_FLAME_GRAPH"), NULL, 0);
 
 	opts.outfile = getenv("HEAPTRACE_OUTFILE");
@@ -114,7 +115,6 @@ static void heaptrace_fini()
 {
 	auto* tfs = &thread_flags;
 	int pid = getpid();
-	enum alloc_sort_order order = ALLOC_SIZE;
 	std::string comm = utils::get_comm_name();
 
 	if (!opts.flamegraph) {
@@ -122,10 +122,7 @@ static void heaptrace_fini()
 			pid, comm.c_str());
 	}
 
-	if (!strcmp(opts.sortkey, "count"))
-		order = ALLOC_COUNT;
-
-	dump_stackmap(order, opts.flamegraph);
+	dump_stackmap(opts.sort_keys, opts.flamegraph);
 
 	if (opts.outfile)
 		fclose(outfp);
