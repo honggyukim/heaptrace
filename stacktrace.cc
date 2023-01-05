@@ -245,22 +245,46 @@ std::string read_statm() {
 	return str;
 }
 
-static void print_dump_stackmap(const time_point_t& current, struct mallinfo& info,
-		std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
+static void print_dump_stackmap_header(const char *sort_key)
 {
-	int cnt = 0;
-	uint64_t total_size = 0;
-	int tid = utils::gettid();
+	pr_out("[heaptrace] dump allocation sorted by '%s' for /proc/%d/maps (%s)\n",
+		sort_key, utils::gettid(), utils::get_comm_name().c_str());
+}
 
-	pr_out("=================================================================\n");
-	pr_out("[heaptrace] dump allocation status for /proc/%d/maps (%s)\n",
-		tid, utils::get_comm_name().c_str());
+static void print_dump_stackmap_footer(
+		const std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
+{
+	// get allocated size info from the allocator
+	struct mallinfo minfo = mallinfo();
+
+	uint64_t total_size = 0;
+	size_t stack_size = sorted_stack.size();
+	for (int i = 0; i < stack_size; i++) {
+		const stack_info_t& sinfo = sorted_stack[i].second;
+		total_size += sinfo.total_size;
+	}
+
+	pr_out("[heaptrace] heap traced num of backtrace : %zd\n", stack_size);
+
+	pr_out("[heaptrace] heap traced allocation size  : %s\n",
+		get_byte_unit(total_size).c_str());
+
+	pr_out("[heaptrace] allocator info (virtual)     : %s\n",
+		get_byte_unit(minfo.arena + minfo.hblkhd).c_str());
+	pr_out("[heaptrace] allocator info (resident)    : %s\n",
+		get_byte_unit(minfo.uordblks).c_str());
+
+	pr_out("[heaptrace] statm info (VSS/RSS/shared)  : %s\n", read_statm().c_str());
+}
+
+static void print_dump_stackmap(std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
+{
+	const time_point_t current = std::chrono::steady_clock::now();
+	int cnt = 0;
 
 	size_t stack_size = sorted_stack.size();
 	for (int i = 0; i < stack_size; i++) {
 		const stack_info_t& info = sorted_stack[i].second;
-
-		total_size += info.total_size;
 
 		if (i >= opts.top)
 			continue;
@@ -280,22 +304,6 @@ static void print_dump_stackmap(const time_point_t& current, struct mallinfo& in
 
 		pr_out("\n");
 	}
-
-	pr_out("[heaptrace] heap traced num of backtrace : %zd\n",
-		stack_size);
-	pr_out("[heaptrace] heap traced allocation size  : %s\n",
-		get_byte_unit(total_size).c_str());
-
-	pr_out("[heaptrace] allocator info (virtual)     : %s\n",
-		get_byte_unit(info.arena + info.hblkhd).c_str());
-	pr_out("[heaptrace] allocator info (resident)    : %s\n",
-		get_byte_unit(info.uordblks).c_str());
-
-	pr_out("[heaptrace] statm info (VSS/RSS/shared)  : %s\n",
-		read_statm().c_str());
-	pr_out("=================================================================\n");
-
-	fflush(outfp);
 }
 
 static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
@@ -322,21 +330,36 @@ static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, 
 	fflush(outfp);
 }
 
-void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
+static void sort_stack(const std::string &order,
+		std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)
+{
+	std::sort(sorted_stack.begin(), sorted_stack.end(),
+		[&order](const std::pair<stack_trace_t, stack_info_t>& p1,
+			const std::pair<stack_trace_t, stack_info_t>& p2) {
+			if (order == "count") {
+				if (p1.second.count == p2.second.count)
+					return p1.second.total_size > p2.second.total_size;
+				return p1.second.count > p2.second.count;
+			}
+			else {
+				// sort based on size for unknown sort order.
+				if (p1.second.total_size == p2.second.total_size)
+					return p1.second.count > p2.second.count;
+				return p1.second.total_size > p2.second.total_size;
+			}
+	});
+}
+
+void dump_stackmap(const char *sort_keys, bool flamegraph)
 {
 	auto* tfs = &thread_flags;
-	time_point_t current;
 
 	if (stackmap.empty())
 		return;
 
+	std::vector<std::string> sort_key_vec = utils::string_split(sort_keys, ',');
+
 	tfs->hook_guard = true;
-
-	// get allocated size info from the allocator
-	struct mallinfo info = mallinfo();
-
-	// get current time
-	current = std::chrono::steady_clock::now();
 
 	// sort the stack trace based on the count and then total_size
 	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
@@ -347,27 +370,23 @@ void dump_stackmap(enum alloc_sort_order order, bool flamegraph)
 		for (auto& p : stackmap)
 			sorted_stack.push_back(make_pair(p.first, p.second));
 	}
-	std::sort(sorted_stack.begin(), sorted_stack.end(),
-		[order](const std::pair<stack_trace_t, stack_info_t>& p1,
-			const std::pair<stack_trace_t, stack_info_t>& p2) {
-			if (order == ALLOC_COUNT) {
-				if (p1.second.count == p2.second.count)
-					return p1.second.total_size > p2.second.total_size;
-				return p1.second.count > p2.second.count;
-			}
-			else if (order == ALLOC_SIZE) {
-				if (p1.second.total_size == p2.second.total_size)
-					return p1.second.count > p2.second.count;
-				return p1.second.total_size > p2.second.total_size;
-			}
-			// not implemented yet
-			abort();
-	});
 
-	if (flamegraph)
+	if (flamegraph) {
+		// use only the first sort order given by -s/--sort option.
+		sort_stack(sort_key_vec.front(), sorted_stack);
 		print_dump_stackmap_flamegraph(sorted_stack);
-	else
-		print_dump_stackmap(current, info, sorted_stack);
+	}
+	else {
+		pr_out("=================================================================\n");
+		for (const auto& sort_key : sort_key_vec) {
+			print_dump_stackmap_header(sort_key.c_str());
+			sort_stack(sort_key, sorted_stack);
+			print_dump_stackmap(sorted_stack);
+		}
+		print_dump_stackmap_footer(sorted_stack);
+		pr_out("=================================================================\n");
+		fflush(outfp);
+	}
 
 	tfs->hook_guard = false;
 }

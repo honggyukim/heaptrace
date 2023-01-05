@@ -8,13 +8,13 @@
 static void sigusr1_handler(int signo)
 {
 	pr_dbg("\n=== sigusr1_handler(%d) ===\n", signo);
-	dump_stackmap(ALLOC_SIZE, opts.flamegraph);
+	dump_stackmap("size", opts.flamegraph);
 }
 
 static void sigusr2_handler(int signo)
 {
 	pr_dbg("\n=== sigusr2_handler(%d) ===\n", signo);
-	dump_stackmap(ALLOC_COUNT, opts.flamegraph);
+	dump_stackmap("count", opts.flamegraph);
 }
 
 static void sigquit_handler(int signo)

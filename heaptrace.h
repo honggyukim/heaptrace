@@ -39,7 +39,7 @@ struct opts {
 	char *exename;
 
 	int top;
-	const char *sortkey;
+	const char *sort_keys;
 	bool flamegraph;
 	char *outfile;
 };
