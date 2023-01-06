@@ -126,6 +126,8 @@ static void heaptrace_fini()
 		order = ALLOC_COUNT;
 
 	dump_stackmap(order, opts.flamegraph);
+	if (!strcmp(opts.sortkey, "dual"))
+		dump_stackmap(ALLOC_COUNT, opts.flamegraph);
 
 	if (opts.outfile)
 		fclose(outfp);
