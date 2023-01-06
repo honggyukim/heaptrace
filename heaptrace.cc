@@ -31,7 +31,7 @@ enum options {
 static struct argp_option heaptrace_options[] = {
 	{ "help", 'h', 0, 0, "Give this help list" },
 	{ "top", OPT_top, "NUM", 0, "Set number of top backtraces to show (default 10)" },
-	{ "sort", 's', "KEY", 0, "Sort backtraces based on KEY (size or count)" },
+	{ "sort", 's', "KEY", 0, "Sort backtraces based on KEY (size, count or dual)" },
 	{ "flame-graph", OPT_flamegraph, 0, 0, "Print heap trace info in flamegraph format" },
 	{ "outfile", OPT_outfile, "FILE", 0, "Save log messages to this file" },
 	{ 0 }
