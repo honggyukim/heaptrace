@@ -10,6 +10,7 @@
 
 #include <string>
 #include <chrono>
+#include <vector>
 
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
@@ -30,6 +31,8 @@ static int gettid(void)
 std::string asprintf(const char* fmt, ...);
 
 std::string get_comm_name(void);
+
+std::vector<std::string> string_split(std::string str, char delim);
 
 struct enum_table {
 	const char *str;

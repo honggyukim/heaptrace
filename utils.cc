@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <vector>
 
 #include "utils.h"
 
@@ -39,6 +40,18 @@ std::string get_comm_name(void)
 	fs >> comm;
 
 	return comm;
+}
+
+std::vector<std::string> string_split(std::string str, char delim)
+{
+	std::vector<std::string> vstr;
+	std::stringstream ss(str);
+	std::string s;
+
+	while (getline(ss, s, delim))
+		vstr.push_back(s);
+
+	return vstr;
 }
 
 static enum_table ht_mmap_prot[] = {
