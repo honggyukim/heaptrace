@@ -66,6 +66,8 @@ struct opts opts;
 
 FILE *outfp;
 
+std::atomic<long long> mem_overhead;
+
 __constructor
 static void heaptrace_init()
 {
@@ -114,6 +116,8 @@ static void heaptrace_init()
 			pid, comm.c_str());
 	}
 
+	mem_overhead = 0;
+
 	initialized = true;
 }
 
@@ -143,8 +147,10 @@ void* operator new(size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return __libc_malloc(size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -162,8 +168,10 @@ void* operator new[](size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return __libc_malloc(size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -182,6 +190,8 @@ void operator delete(void *ptr)
 	auto* tfs = &thread_flags;
 
 	if (unlikely(tfs->hook_guard || !initialized)) {
+		auto size = addrmap.find(ptr) != addrmap.end() ? addrmap[ptr].size : 0;
+		mem_overhead -= size;
 		__libc_free(ptr);
 		return;
 	}
@@ -201,6 +211,8 @@ void operator delete[](void *ptr)
 	auto* tfs = &thread_flags;
 
 	if (unlikely(tfs->hook_guard || !initialized)) {
+		auto size = addrmap.find(ptr) != addrmap.end() ? addrmap[ptr].size : 0;
+		mem_overhead -= size;
 		__libc_free(ptr);
 		return;
 	}
@@ -219,8 +231,10 @@ void* malloc(size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return __libc_malloc(size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -239,6 +253,8 @@ void free(void *ptr)
 	auto* tfs = &thread_flags;
 
 	if (unlikely(tfs->hook_guard || !initialized)) {
+		auto size = addrmap.find(ptr) != addrmap.end() ? addrmap[ptr].size : 0;
+		mem_overhead -= size;
 		__libc_free(ptr);
 		return;
 	}
@@ -257,8 +273,10 @@ void *calloc(size_t nmemb, size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += nmemb * size;
 		return __libc_calloc(nmemb, size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -276,8 +294,11 @@ void *realloc(void *ptr, size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		auto sz = addrmap.find(ptr) != addrmap.end() ? addrmap[ptr].size : 0;
+		mem_overhead += (size - sz);
 		return __libc_realloc(ptr, size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -296,8 +317,10 @@ void *memalign(size_t alignment, size_t size)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return __libc_memalign(alignment, size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -318,8 +341,10 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 	if (unlikely(!real_posix_memalign))
 		real_posix_memalign = (PosixMemalignFunction)dlsym(RTLD_NEXT, "posix_memalign");
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return real_posix_memalign(memptr, alignment, size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -338,8 +363,10 @@ void *aligned_alloc(size_t alignment, size_t size)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return __aligned_alloc(alignment, size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -357,8 +384,10 @@ void *pvalloc(size_t size)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return __pvalloc(size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -376,8 +405,10 @@ void *valloc(size_t size)
 {
 	auto *tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		mem_overhead += size;
 		return __valloc(size);
+	}
 
 	tfs->hook_guard = true;
 
@@ -395,8 +426,11 @@ void *reallocarray(void *ptr, size_t nmemb, size_t size)
 {
 	auto* tfs = &thread_flags;
 
-	if (unlikely(tfs->hook_guard || !initialized))
+	if (unlikely(tfs->hook_guard || !initialized)) {
+		auto sz = addrmap.find(ptr) != addrmap.end() ? addrmap[ptr].size : 0;
+		mem_overhead += (nmemb * size - sz);
 		return real_reallocarray(ptr, nmemb, size);
+	}
 
 	tfs->hook_guard = true;
 

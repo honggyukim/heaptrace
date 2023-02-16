@@ -8,6 +8,7 @@
 
 #include <array>
 #include <chrono>
+#include <map>
 
 #include "heaptrace.h"
 #include "compiler.h"
@@ -31,6 +32,8 @@ struct object_info_t {
 	stack_trace_t stack_trace;
 	uint64_t size;
 };
+
+extern std::map<addr_t, object_info_t> addrmap;
 
 void __record_backtrace(size_t size, void* addr,
 			stack_trace_t& stack_trace, int nptrs);
