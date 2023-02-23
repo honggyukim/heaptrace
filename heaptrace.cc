@@ -101,6 +101,7 @@ static void init_options(int argc, char *argv[])
 	};
 
 	// set default option values
+	// TODO: create constexpr variables instead of default magic values.
 	opts.top = 10;
 	opts.sort_keys = "size";
 	opts.flamegraph = false;

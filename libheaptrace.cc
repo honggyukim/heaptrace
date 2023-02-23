@@ -73,6 +73,7 @@ static void heaptrace_init()
 	int pid = getpid();
 	std::stringstream ss;
 	std::string comm = utils::get_comm_name();
+	char *env;
 
 	real_malloc = (MallocFunction)dlsym(RTLD_NEXT, "malloc");
 	real_free = (FreeFunction)dlsym(RTLD_NEXT, "free");
@@ -89,9 +90,15 @@ static void heaptrace_init()
 	sighandler_init();
 
 	// setup option values
-	opts.top = strtol(getenv("HEAPTRACE_NUM_TOP_BACKTRACE"), NULL, 0);
-	opts.sort_keys = getenv("HEAPTRACE_SORT_KEYS");
-	opts.flamegraph = strtol(getenv("HEAPTRACE_FLAME_GRAPH"), NULL, 0);
+	// TODO: create constexpr variables instead of default magic values.
+	env = getenv("HEAPTRACE_NUM_TOP_BACKTRACE");
+	opts.top = env ? strtol(env, NULL, 0) : 10;
+
+	env = getenv("HEAPTRACE_SORT_KEYS");
+	opts.sort_keys = env ? env : "size";
+
+	env = getenv("HEAPTRACE_FLAME_GRAPH");
+	opts.flamegraph = env ? strtol(env, NULL, 0) : false;
 
 	opts.outfile = getenv("HEAPTRACE_OUTFILE");
 	if (opts.outfile) {
