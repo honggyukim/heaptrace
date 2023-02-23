@@ -11,7 +11,7 @@ endif
 CFLAGS   := -rdynamic -funwind-tables
 CXXFLAGS := $(CFLAGS)
 
-SRCS := sample.c factorial.c
+SRCS := factorial.c sample.c sample_leak.c
 BINS := $(patsubst %.c,%.out,$(SRCS))
 
 all: $(BINS)
