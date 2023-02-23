@@ -357,9 +357,9 @@ void dump_stackmap(const char *sort_keys, bool flamegraph)
 	if (stackmap.empty())
 		return;
 
-	std::vector<std::string> sort_key_vec = utils::string_split(sort_keys, ',');
-
 	tfs->hook_guard = true;
+
+	std::vector<std::string> sort_key_vec = utils::string_split(sort_keys, ',');
 
 	// sort the stack trace based on the count and then total_size
 	std::vector<std::pair<stack_trace_t, stack_info_t>> sorted_stack;
