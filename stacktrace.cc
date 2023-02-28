@@ -127,9 +127,8 @@ static void print_backtrace_symbol(int count, void *addr)
 		free(symbol);
 	}
 	else {
-		// TODO: It'd be better to print related address based on its
-		//       load address.  It needs to calculate the load base.
-		pr_out("%s (+%p)\n", dlip.dli_fname, addr);
+		offset = (int)((char*)addr - (char*)(dlip.dli_fbase));
+		pr_out("%s (+%#x)\n", dlip.dli_fname, offset);
 	}
 }
 
