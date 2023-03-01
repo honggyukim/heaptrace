@@ -15,7 +15,6 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
-#include <map>
 
 #include <mutex>
 
@@ -274,6 +273,9 @@ static void print_dump_stackmap_footer(
 		get_byte_unit(minfo.uordblks).c_str());
 
 	pr_out("[heaptrace] statm info (VSS/RSS/shared)  : %s\n", read_statm().c_str());
+
+	pr_out("[heaptrace] self consumed (mem overhead) : %s\n",
+		get_byte_unit(mem_overhead).c_str());
 }
 
 static void print_dump_stackmap(std::vector<std::pair<stack_trace_t, stack_info_t>>& sorted_stack)

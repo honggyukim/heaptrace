@@ -5,7 +5,11 @@
 
 #include <stdio.h>
 
+#include <atomic>
+
 extern FILE *outfp;
+
+extern std::atomic<long long> mem_overhead;
 
 #define TERM_COLOR_NORMAL   ""
 #define TERM_COLOR_RESET    "\033[0m"
