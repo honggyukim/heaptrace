@@ -121,13 +121,11 @@ static void print_backtrace_symbol(int count, void *addr)
 		}
 		offset = static_cast<int>(static_cast<int *>(addr) -
 					  static_cast<int *>(dlip.dli_saddr));
-		pr_out("%s +%#x\n", symbol, offset);
+		pr_out("%s +%#x ", symbol, offset);
 		free(symbol);
 	}
-	else {
-		offset = (int)((char *)addr - (char *)(dlip.dli_fbase));
-		pr_out("%s (+%#x)\n", dlip.dli_fname, offset);
-	}
+	offset = (int)((char *)addr - (char *)(dlip.dli_fbase));
+	pr_out("(%s +%#x)\n", dlip.dli_fname, offset);
 }
 
 static void print_backtrace_symbol_flamegraph(void *addr, const char *semicolon)
