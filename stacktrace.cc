@@ -286,7 +286,7 @@ static void print_dump_stackmap(std::vector<std::pair<stack_trace_t, stack_info_
 		const stack_info_t& info = sorted_stack[i].second;
 
 		if (i >= opts.top)
-			continue;
+			break;
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 		std::string age = get_delta_time_unit(current - info.birth_time);
@@ -315,7 +315,7 @@ static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, 
 		const char *semicolon = "";
 
 		if (i >= opts.top)
-			continue;
+			break;
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 
