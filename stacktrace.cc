@@ -298,8 +298,8 @@ static void print_dump_stackmap(std::vector<std::pair<stack_trace_t, stack_info_
 			get_byte_unit(info.peak_total_size).c_str(),
 			age.c_str());
 
-		for (int i = 0; i < info.stack_depth; i++)
-			print_backtrace_symbol(i, stack_trace[i]);
+		for (int j = 0; j < info.stack_depth; j++)
+			print_backtrace_symbol(j, stack_trace[j]);
 
 		pr_out("\n");
 	}
@@ -319,8 +319,8 @@ static void print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, 
 
 		const stack_trace_t& stack_trace = sorted_stack[i].first;
 
-		for (int i = info.stack_depth - 1; i >= 0; i--) {
-			print_backtrace_symbol_flamegraph(stack_trace[i], semicolon);
+		for (int j = info.stack_depth - 1; j >= 0; j--) {
+			print_backtrace_symbol_flamegraph(stack_trace[j], semicolon);
 			semicolon = ";";
 		}
 		pr_out(" %" PRIu64 "\n", size);
