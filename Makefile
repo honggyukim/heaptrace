@@ -53,11 +53,11 @@ endif
 TARGETS := heaptrace libheaptrace.so
 
 # for libheaptrace.so
-LIB_SRCS := libheaptrace.cc stacktrace.cc sighandler.cc utils.cc
+LIB_SRCS := src/libheaptrace.cc src/stacktrace.cc src/sighandler.cc src/utils.cc
 LIB_OBJS := $(patsubst %.cc,$(objdir)/%.o,$(LIB_SRCS))
 
 # for heaptrace
-HEAPTRACE_SRCS := heaptrace.cc
+HEAPTRACE_SRCS := src/heaptrace.cc
 HEAPTRACE_OBJS := $(patsubst %.cc,$(objdir)/%.o,$(HEAPTRACE_SRCS))
 
 # build rule begin
