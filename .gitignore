@@ -1,0 +1,6 @@
+heaptrace
+*.o
+*.so
+*.out
+*.patch
+*.swp
