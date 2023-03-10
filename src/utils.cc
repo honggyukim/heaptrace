@@ -58,7 +58,7 @@ static enum_table ht_mmap_prot[] = {
 	{ "PROT_NONE",  0 },
 	{ "PROT_READ",  1 },
 	{ "PROT_WRITE", 2 },
-	{ "PROT_EXEC",  4 }
+	{ "PROT_EXEC",  4 },
 };
 
 static enum_table ht_mmap_flags[] = {
@@ -74,7 +74,7 @@ static enum_table ht_mmap_flags[] = {
 	{ "MAP_POPULATE",   0x8000  },
 	{ "MAP_NONBLOCK",   0x10000 },
 	{ "MAP_STACK",      0x20000 },
-	{ "MAP_HUGETLB",    0x40000 }
+	{ "MAP_HUGETLB",    0x40000 },
 };
 
 static std::string mmap_string(int val, const struct enum_table* et, int len)

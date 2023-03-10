@@ -41,7 +41,7 @@ void __record_backtrace(size_t size, void* addr,
 
 	if (stackmap.find(stack_trace) == stackmap.end()) {
 		// Record the creation time for the stack_trace
-		struct stack_info_t stack_info = { 0, };
+		struct stack_info_t stack_info{};
 		stack_info.birth_time = std::chrono::steady_clock::now();
 		stackmap[stack_trace] = stack_info;
 	}

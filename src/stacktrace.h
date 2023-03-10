@@ -41,7 +41,7 @@ void __record_backtrace(size_t size, void* addr,
 inline void record_backtrace(size_t size, void* addr)
 {
 	int nptrs;
-	stack_trace_t stack_trace = { 0, };
+	stack_trace_t stack_trace{};
 
 	if (unlikely(!addr))
 		return;
