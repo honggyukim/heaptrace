@@ -9,13 +9,13 @@
 #include <array>
 #include <chrono>
 
-#include "heaptrace.h"
 #include "compiler.h"
+#include "heaptrace.h"
 
 extern struct opts opts;
 
-using stack_trace_t = std::array<void*, DEPTH>;
-using addr_t = void*;
+using stack_trace_t = std::array<void *, DEPTH>;
+using addr_t = void *;
 using time_point_t = std::chrono::steady_clock::time_point;
 
 struct stack_info_t {
@@ -32,13 +32,12 @@ struct object_info_t {
 	uint64_t size;
 };
 
-void __record_backtrace(size_t size, void* addr,
-			stack_trace_t& stack_trace, int nptrs);
+void __record_backtrace(size_t size, void *addr, stack_trace_t &stack_trace, int nptrs);
 
 // This is defined as a inline function to avoid having one more useless
 // backtrace in the recorded stacktrace.
 // Most of the work will be done inside __record_backtrace().
-inline void record_backtrace(size_t size, void* addr)
+inline void record_backtrace(size_t size, void *addr)
 {
 	int nptrs;
 	stack_trace_t stack_trace{};
@@ -50,7 +49,7 @@ inline void record_backtrace(size_t size, void* addr)
 	__record_backtrace(size, addr, stack_trace, nptrs);
 }
 
-void release_backtrace(void* addr);
+void release_backtrace(void *addr);
 
 void dump_stackmap(const char *sort_str, bool flamegraph = false);
 

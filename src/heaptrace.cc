@@ -1,13 +1,13 @@
 /* Copyright (c) 2022 LG Electronics Inc. */
 /* SPDX-License-Identifier: GPL-2.0 */
+#include <argp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <argp.h>
 
-#include <string>
 #include <sstream>
+#include <string>
 
 #include "heaptrace.h"
 
@@ -39,11 +39,11 @@ static struct argp_option heaptrace_options[] = {
 
 static error_t parse_option(int key, char *arg, struct argp_state *state)
 {
-	struct opts *opts = (struct opts*)state->input;
+	struct opts *opts = (struct opts *)state->input;
 
 	switch (key) {
 	case 'h':
-		argp_state_help (state, state->out_stream, ARGP_HELP_STD_HELP);
+		argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
 		break;
 
 	case OPT_top:
