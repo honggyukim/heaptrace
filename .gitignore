@@ -4,3 +4,6 @@ heaptrace
 *.out
 *.patch
 *.swp
+CMake*
+cmake_install.cmake
+compile_commands.json
