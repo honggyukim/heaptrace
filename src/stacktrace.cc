@@ -95,23 +95,25 @@ static void print_backtrace_symbol(int count, void *addr)
 	char *symbol;
 	int offset;
 	int status;
-
-	// dladdr() translates address to symbolic info.
-	dladdr(addr, &dlip);
+	int dl_ret;
+	int len = SYMBOL_MAXLEN;
 
 #if __SIZEOF_LONG__ == 4
 	pr_out("%2d [%#10lx] ", count, (unsigned long)addr);
 #else
 	pr_out("%2d [%#14lx] ", count, (unsigned long)addr);
 #endif
+	// dladdr() translates address to symbolic info.
+	dl_ret = dladdr(addr, &dlip);
+	if (dl_ret == 0) {
+		pr_out("?\n");
+		return;
+	}
 
-	symbol = abi::__cxa_demangle(dlip.dli_sname, nullptr, nullptr, &status);
-
-	if (status == -2 && !symbol)
-		symbol = strdup(dlip.dli_sname);
-
-	if (symbol) {
-		int len = SYMBOL_MAXLEN;
+	if (dlip.dli_sname != nullptr && dlip.dli_saddr != nullptr) {
+		symbol = abi::__cxa_demangle(dlip.dli_sname, nullptr, nullptr, &status);
+		if (status != 0)
+			symbol = strdup(dlip.dli_sname);
 
 		if (strlen(symbol) > len) {
 			symbol[len - 3] = '.';
