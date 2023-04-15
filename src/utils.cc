@@ -34,9 +34,8 @@ std::string get_comm_name(void)
 {
 	std::string comm;
 	std::stringstream ss;
-	int tid = utils::gettid();
 
-	ss << "/proc/" << tid << "/comm";
+	ss << "/proc/" << utils::gettid() << "/comm";
 
 	std::ifstream fs(ss.str());
 	fs >> comm;
@@ -78,7 +77,7 @@ static std::string mmap_string(int val, const struct enum_table *et, int len)
 	/* exact match */
 	for (int i = len - 1; i >= 0; i--) {
 		if (val == et[i].val)
-			return std::string(et[i].str);
+			return { et[i].str };
 	}
 
 	/* OR-ing bit flags */

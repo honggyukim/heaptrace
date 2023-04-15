@@ -23,7 +23,7 @@ typedef std::chrono::duration<uint64_t, std::kilo> kilobytes;
 typedef std::chrono::duration<uint64_t, std::mega> megabytes;
 typedef std::chrono::duration<uint64_t, std::giga> gigabytes;
 
-static int gettid(void)
+static long gettid(void)
 {
 	return syscall(SYS_gettid);
 }
