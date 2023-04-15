@@ -32,7 +32,7 @@ std::string asprintf(const char *fmt, ...);
 
 std::string get_comm_name(void);
 
-std::vector<std::string> string_split(std::string str, char delim);
+std::vector<std::string> string_split(const std::string &str, char delim);
 
 struct enum_table {
 	const char *str;

@@ -10,6 +10,7 @@ Checks: >-
     -modernize-redundant-void-arg,
     -modernize-use-trailing-return-type,
     -modernize-use-using,
+    performance-*,
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
