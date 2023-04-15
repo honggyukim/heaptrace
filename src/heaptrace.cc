@@ -47,7 +47,7 @@ static error_t parse_option(int key, char *arg, struct argp_state *state)
 		break;
 
 	case OPT_top:
-		opts->top = strtol(arg, nullptr, 0);
+		opts->top = std::stoi(arg);
 		break;
 
 	case 's':

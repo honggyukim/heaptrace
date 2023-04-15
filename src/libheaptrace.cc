@@ -90,13 +90,13 @@ __constructor static void heaptrace_init()
 	// setup option values
 	// TODO: create constexpr variables instead of default magic values.
 	env = getenv("HEAPTRACE_NUM_TOP_BACKTRACE");
-	opts.top = env ? strtol(env, nullptr, 0) : 10;
+	opts.top = env ? std::stoi(env) : 10;
 
 	env = getenv("HEAPTRACE_SORT_KEYS");
 	opts.sort_keys = env ? env : "size";
 
 	env = getenv("HEAPTRACE_FLAME_GRAPH");
-	opts.flamegraph = env ? strtol(env, nullptr, 0) : false;
+	opts.flamegraph = env ? std::stoi(env) : false;
 
 	opts.outfile = getenv("HEAPTRACE_OUTFILE");
 	if (opts.outfile) {

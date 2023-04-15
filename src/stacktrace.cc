@@ -228,8 +228,8 @@ static std::string get_byte_unit(uint64_t size)
 
 std::string read_statm()
 {
-	int vss, rss, shared;
-	int pagesize_kb = sysconf(_SC_PAGESIZE);
+	long vss, rss, shared;
+	long pagesize_kb = sysconf(_SC_PAGESIZE);
 	std::ifstream fs("/proc/self/statm");
 
 	fs >> vss >> rss >> shared;
@@ -244,7 +244,7 @@ std::string read_statm()
 
 static void print_dump_stackmap_header(const char *sort_key)
 {
-	pr_out("[heaptrace] dump allocation sorted by '%s' for /proc/%d/maps (%s)\n", sort_key,
+	pr_out("[heaptrace] dump allocation sorted by '%s' for /proc/%ld/maps (%s)\n", sort_key,
 	       utils::gettid(), utils::get_comm_name().c_str());
 }
 
@@ -315,7 +315,7 @@ print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t
 
 		const stack_trace_t &stack_trace = sorted_stack[i].first;
 
-		for (int j = info.stack_depth - 1; j >= 0; j--) {
+		for (size_t j = info.stack_depth - 1; j >= 0; j--) {
 			print_backtrace_symbol_flamegraph(stack_trace[j], semicolon);
 			semicolon = ";";
 		}
