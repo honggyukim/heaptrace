@@ -307,7 +307,6 @@ print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t
 	size_t stack_size = sorted_stack.size();
 	for (int i = 0; i < stack_size; i++) {
 		const stack_info_t &info = sorted_stack[i].second;
-		size_t count = info.count;
 		uint64_t size = info.total_size;
 		const char *semicolon = "";
 

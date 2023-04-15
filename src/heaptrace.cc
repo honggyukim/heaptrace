@@ -114,7 +114,6 @@ static void setup_child_environ(struct opts *opts, int argc, char *argv[])
 	std::stringstream ss;
 	char buf[4096];
 	char *old_preload = getenv("LD_PRELOAD");
-	char *old_libpath = getenv("LD_LIBRARY_PATH");
 
 	if (!access("libheaptrace.so", X_OK))
 		ss << "./";
