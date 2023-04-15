@@ -1,9 +1,9 @@
 /* Copyright (c) 2022 LG Electronics Inc. */
 /* SPDX-License-Identifier: GPL-2.0 */
 #include <argp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 
 #include <sstream>
@@ -29,17 +29,17 @@ enum options {
 };
 
 static struct argp_option heaptrace_options[] = {
-	{ "help", 'h', 0, 0, "Give this help list" },
+	{ "help", 'h', nullptr, 0, "Give this help list" },
 	{ "top", OPT_top, "NUM", 0, "Set number of top backtraces to show (default 10)" },
 	{ "sort", 's', "KEYs", 0, "Sort backtraces based on KEYs (size or count)" },
-	{ "flame-graph", OPT_flamegraph, 0, 0, "Print heap trace info in flamegraph format" },
+	{ "flame-graph", OPT_flamegraph, nullptr, 0, "Print heap trace info in flamegraph format" },
 	{ "outfile", OPT_outfile, "FILE", 0, "Save log messages to this file" },
-	{ 0 }
+	{ nullptr }
 };
 
 static error_t parse_option(int key, char *arg, struct argp_state *state)
 {
-	struct opts *opts = (struct opts *)state->input;
+	auto *opts = (struct opts *)state->input;
 
 	switch (key) {
 	case 'h':
@@ -47,7 +47,7 @@ static error_t parse_option(int key, char *arg, struct argp_state *state)
 		break;
 
 	case OPT_top:
-		opts->top = strtol(arg, NULL, 0);
+		opts->top = strtol(arg, nullptr, 0);
 		break;
 
 	case 's':
@@ -66,7 +66,7 @@ static error_t parse_option(int key, char *arg, struct argp_state *state)
 		if (state->arg_num)
 			return ARGP_ERR_UNKNOWN;
 
-		if (opts->exename == NULL) {
+		if (opts->exename == nullptr) {
 			// remaining options will be processed in ARGP_KEY_ARGS
 			return ARGP_ERR_UNKNOWN;
 		}
@@ -106,7 +106,7 @@ static void init_options(int argc, char *argv[])
 	opts.sort_keys = "size";
 	opts.flamegraph = false;
 
-	argp_parse(&argp, argc, argv, ARGP_IN_ORDER, NULL, &opts);
+	argp_parse(&argp, argc, argv, ARGP_IN_ORDER, nullptr, &opts);
 }
 
 static void setup_child_environ(struct opts *opts, int argc, char *argv[])

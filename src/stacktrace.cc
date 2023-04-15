@@ -1,11 +1,11 @@
 /* Copyright (c) 2022 LG Electronics Inc. */
 /* SPDX-License-Identifier: GPL-2.0 */
-#include <inttypes.h>
-#include <limits.h>
+#include <cinttypes>
+#include <climits>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <malloc.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <cxxabi.h>
 #include <dlfcn.h>
@@ -105,7 +105,7 @@ static void print_backtrace_symbol(int count, void *addr)
 	pr_out("%2d [%#14lx] ", count, (unsigned long)addr);
 #endif
 
-	symbol = abi::__cxa_demangle(dlip.dli_sname, 0, 0, &status);
+	symbol = abi::__cxa_demangle(dlip.dli_sname, nullptr, nullptr, &status);
 
 	if (status == -2 && !symbol)
 		symbol = strdup(dlip.dli_sname);
@@ -138,7 +138,7 @@ static void print_backtrace_symbol_flamegraph(void *addr, const char *semicolon)
 	// dladdr() translates address to symbolic info.
 	dladdr(addr, &dlip);
 
-	symbol = abi::__cxa_demangle(dlip.dli_sname, 0, 0, &status);
+	symbol = abi::__cxa_demangle(dlip.dli_sname, nullptr, nullptr, &status);
 
 	if (status == -2 && !symbol)
 		symbol = strdup(dlip.dli_sname);
@@ -363,7 +363,7 @@ void dump_stackmap(const char *sort_keys, bool flamegraph)
 		std::lock_guard<std::recursive_mutex> lock(container_mutex);
 
 		for (auto &p : stackmap)
-			sorted_stack.push_back(make_pair(p.first, p.second));
+			sorted_stack.emplace_back(p.first, p.second);
 	}
 
 	if (flamegraph) {

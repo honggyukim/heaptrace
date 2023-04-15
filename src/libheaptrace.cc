@@ -3,12 +3,12 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
+#include <csignal>
 #include <dlfcn.h>
-#include <signal.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -90,13 +90,13 @@ __constructor static void heaptrace_init()
 	// setup option values
 	// TODO: create constexpr variables instead of default magic values.
 	env = getenv("HEAPTRACE_NUM_TOP_BACKTRACE");
-	opts.top = env ? strtol(env, NULL, 0) : 10;
+	opts.top = env ? strtol(env, nullptr, 0) : 10;
 
 	env = getenv("HEAPTRACE_SORT_KEYS");
 	opts.sort_keys = env ? env : "size";
 
 	env = getenv("HEAPTRACE_FLAME_GRAPH");
-	opts.flamegraph = env ? strtol(env, NULL, 0) : false;
+	opts.flamegraph = env ? strtol(env, nullptr, 0) : false;
 
 	opts.outfile = getenv("HEAPTRACE_OUTFILE");
 	if (opts.outfile) {

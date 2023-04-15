@@ -3,7 +3,7 @@
 #ifndef HEAPTRACE_HEAPTRACE_H
 #define HEAPTRACE_HEAPTRACE_H
 
-#include <stdio.h>
+#include <cstdio>
 
 extern FILE *outfp;
 
