@@ -43,7 +43,7 @@ std::string get_comm_name(void)
 	return comm;
 }
 
-std::vector<std::string> string_split(std::string str, char delim)
+std::vector<std::string> string_split(const std::string &str, char delim)
 {
 	std::vector<std::string> vstr;
 	std::stringstream ss(str);
