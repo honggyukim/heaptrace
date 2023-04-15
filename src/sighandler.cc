@@ -25,7 +25,9 @@ static void sigquit_handler(int signo)
 
 void sighandler_init(void)
 {
-	struct sigaction sigusr1, sigusr2, sigquit;
+	struct sigaction sigusr1;
+	struct sigaction sigusr2;
+	struct sigaction sigquit;
 
 	sigusr1.sa_handler = sigusr1_handler;
 	sigemptyset(&sigusr1.sa_mask);

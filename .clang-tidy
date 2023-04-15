@@ -11,6 +11,11 @@ Checks: >-
     -modernize-use-trailing-return-type,
     -modernize-use-using,
     performance-*,
+    readability-*,
+    -readability-braces-around-statements,
+    -readability-else-after-return,
+    -readability-identifier-length,
+    -readability-implicit-bool-conversion,
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

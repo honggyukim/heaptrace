@@ -228,7 +228,9 @@ static std::string get_byte_unit(uint64_t size)
 
 std::string read_statm()
 {
-	long vss, rss, shared;
+	long vss;
+	long rss;
+	long shared;
 	long pagesize_kb = sysconf(_SC_PAGESIZE);
 	std::ifstream fs("/proc/self/statm");
 

@@ -12,8 +12,6 @@
 #include "compiler.h"
 #include "heaptrace.h"
 
-extern struct opts opts;
-
 using stack_trace_t = std::array<void *, DEPTH>;
 using addr_t = void *;
 using time_point_t = std::chrono::steady_clock::time_point;
@@ -51,7 +49,7 @@ inline void record_backtrace(size_t size, void *addr)
 
 void release_backtrace(void *addr);
 
-void dump_stackmap(const char *sort_str, bool flamegraph = false);
+void dump_stackmap(const char *sort_keys, bool flamegraph = false);
 
 void clear_stackmap(void);
 
