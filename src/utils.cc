@@ -18,10 +18,12 @@ std::string asprintf(const char *fmt, ...)
 	va_list args;
 	std::string str;
 	char *ptr;
-	int ret;
 
 	va_start(args, fmt);
-	ret = vasprintf(&ptr, fmt, args);
+	if (vasprintf(&ptr, fmt, args) < 0) {
+		va_end(args);
+		return {};
+	}
 	str = ptr;
 	free(ptr);
 	va_end(args);

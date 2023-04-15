@@ -68,7 +68,6 @@ FILE *outfp;
 
 __constructor static void heaptrace_init()
 {
-	auto *tfs = &thread_flags;
 	int pid = getpid();
 	std::stringstream ss;
 	std::string comm = utils::get_comm_name();
@@ -169,7 +168,7 @@ __visible_default void *operator new[](size_t size)
 	return p;
 }
 
-__visible_default void operator delete(void *ptr)
+__visible_default void operator delete(void *ptr) noexcept
 {
 	auto *tfs = &thread_flags;
 
@@ -187,7 +186,7 @@ __visible_default void operator delete(void *ptr)
 	tfs->hook_guard = false;
 }
 
-__visible_default void operator delete[](void *ptr)
+__visible_default void operator delete[](void *ptr) noexcept
 {
 	auto *tfs = &thread_flags;
 
