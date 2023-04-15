@@ -1,6 +1,6 @@
 /* Copyright (c) 2022 LG Electronics Inc. */
 /* SPDX-License-Identifier: GPL-2.0 */
-#include <signal.h>
+#include <csignal>
 
 #include "heaptrace.h"
 #include "stacktrace.h"
@@ -39,12 +39,12 @@ void sighandler_init(void)
 	sigemptyset(&sigquit.sa_mask);
 	sigquit.sa_flags = 0;
 
-	if (sigaction(SIGUSR1, &sigusr1, 0) == -1)
+	if (sigaction(SIGUSR1, &sigusr1, nullptr) == -1)
 		pr_dbg("signal(SIGUSR1) error");
 
-	if (sigaction(SIGUSR2, &sigusr2, 0) == -1)
+	if (sigaction(SIGUSR2, &sigusr2, nullptr) == -1)
 		pr_dbg("signal(SIGUSR2) error");
 
-	if (sigaction(SIGQUIT, &sigquit, 0) == -1)
+	if (sigaction(SIGQUIT, &sigquit, nullptr) == -1)
 		pr_dbg("signal(SIGQUIT) error");
 }

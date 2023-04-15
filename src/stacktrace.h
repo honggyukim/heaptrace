@@ -3,8 +3,8 @@
 #ifndef HEAPTRACE_STACKTRACE_H
 #define HEAPTRACE_STACKTRACE_H
 
+#include <cstdint>
 #include <execinfo.h>
-#include <stdint.h>
 
 #include <array>
 #include <chrono>
