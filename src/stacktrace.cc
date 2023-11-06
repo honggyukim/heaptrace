@@ -323,21 +323,18 @@ print_dump_stackmap_footer(const std::vector<std::pair<stack_trace_t, stack_info
 static void print_dump_stackmap(std::vector<std::pair<stack_trace_t, stack_info_t>> &sorted_stack)
 {
 	const time_point_t current = std::chrono::steady_clock::now();
-	int cnt = 0;
+	int cnt = 1;
+	int top = opts.top;
+	int i = 0;
 
 	size_t stack_size = sorted_stack.size();
-	for (int i = 0; i < stack_size; i++) {
+	while (i < stack_size && i < top) {
 		const stack_info_t &info = sorted_stack[i].second;
-
-		if (i >= opts.top)
-			break;
-
 		const stack_trace_t &stack_trace = sorted_stack[i].first;
 		std::string age = get_delta_time_unit(current - info.birth_time);
 		std::stringstream ss_intro;
 		std::stringstream ss_bt;
 
-		++cnt;
 		ss_intro << "=== backtrace #" << cnt << " === [count/peak: " << info.count << "/"
 			 << info.peak_count << "] "
 			 << "[size/peak: " << get_byte_unit(info.total_size) << "/"
@@ -346,7 +343,14 @@ static void print_dump_stackmap(std::vector<std::pair<stack_trace_t, stack_info_
 		for (int j = 0; j < info.stack_depth; j++)
 			get_backtrace_string(j, stack_trace[j], ss_bt);
 
-		pr_out("%s%s\n", ss_intro.str().c_str(), ss_bt.str().c_str());
+		if (is_ignored(ss_bt.str())) {
+			++top;
+		}
+		else {
+			pr_out("%s%s\n", ss_intro.str().c_str(), ss_bt.str().c_str());
+			++cnt;
+		}
+		++i;
 	}
 }
 
@@ -354,14 +358,13 @@ static void
 print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t>> &sorted_stack)
 {
 	size_t stack_size = sorted_stack.size();
-	for (int i = 0; i < stack_size; i++) {
+	int i = 0;
+	int top = opts.top;
+
+	while (i < stack_size && i < top) {
 		const stack_info_t &info = sorted_stack[i].second;
 		uint64_t size = info.total_size;
 		const char *semicolon = "";
-
-		if (i >= opts.top)
-			break;
-
 		const stack_trace_t &stack_trace = sorted_stack[i].first;
 		std::stringstream ss_bt;
 
@@ -371,8 +374,14 @@ print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t
 							semicolon, ss_bt);
 			semicolon = ";";
 		}
-		pr_out("%s", ss_bt.str().c_str());
-		pr_out(" %" PRIu64 "\n", size);
+		if (is_ignored(ss_bt.str())) {
+			++top;
+		}
+		else {
+			pr_out("%s", ss_bt.str().c_str());
+			pr_out(" %" PRIu64 "\n", size);
+		}
+		++i;
 	}
 
 	fflush(outfp);
