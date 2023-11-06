@@ -17,7 +17,6 @@
 #include <map>
 #include <sstream>
 #include <vector>
-
 #include <mutex>
 
 #include "compiler.h"
@@ -33,8 +32,39 @@
 
 std::map<stack_trace_t, stack_info_t> stackmap;
 std::map<addr_t, object_info_t> addrmap;
+std::vector<std::string> ignorevec;
+bool ignorevec_initialized = false;
 
 std::recursive_mutex container_mutex;
+
+static void lazyinit_ignorevec()
+{
+	if (ignorevec_initialized)
+		return;
+
+	opts.ignore = getenv("HEAPTRACE_IGNORE");
+	if (opts.ignore) {
+		std::ifstream file(opts.ignore);
+		if (file.is_open()) {
+			std::string line;
+			while (std::getline(file, line)) {
+				ignorevec.push_back(line);
+			}
+			file.close();
+		}
+		else {
+			pr_out("Failed to open file %s\n", opts.ignore);
+		}
+	}
+	ignorevec_initialized = true;
+}
+
+static bool is_ignored(const std::string &report)
+{
+	lazyinit_ignorevec();
+	return std::any_of(ignorevec.begin(), ignorevec.end(), [&report](const std::string& s)
+			   { return report.find(s) != std::string::npos; });
+}
 
 // record_backtrace() is defined in stacktrace.h as an inline function.
 void __record_backtrace(size_t size, void *addr, stack_trace_t &stack_trace, int nptrs)
