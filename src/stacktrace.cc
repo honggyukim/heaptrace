@@ -319,8 +319,9 @@ print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t
 
 		const stack_trace_t &stack_trace = sorted_stack[i].first;
 
-		for (size_t j = info.stack_depth - 1; j >= 0; j--) {
-			print_backtrace_symbol_flamegraph(stack_trace[j], semicolon);
+		for (size_t j = 0; j < info.stack_depth; ++j) {
+			print_backtrace_symbol_flamegraph(stack_trace[info.stack_depth - 1 - j],
+							  semicolon);
 			semicolon = ";";
 		}
 		pr_out(" %" PRIu64 "\n", size);
