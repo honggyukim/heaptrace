@@ -3,6 +3,9 @@
 #ifndef HEAPTOP_SIGHANDLER_H
 #define HEAPTOP_SIGHANDLER_H
 
+#include <csignal>
+
+void register_sighandler(sighandler_t handler, int signo);
 void sighandler_init(void);
 
 #endif /* HEAPTOP_SIGHANDLER_H */
