@@ -13,10 +13,10 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <map>
 #include <sstream>
 #include <vector>
-
 #include <mutex>
 
 #include "compiler.h"
@@ -28,8 +28,39 @@
 
 std::map<stack_trace_t, stack_info_t> stackmap;
 std::map<addr_t, object_info_t> addrmap;
+std::vector<std::string> ignorevec;
+bool ignorevec_initialized = false;
 
 std::recursive_mutex container_mutex;
+
+static void lazyinit_ignorevec()
+{
+	if (ignorevec_initialized)
+		return;
+
+	opts.ignore = getenv("HEAPTRACE_IGNORE");
+	if (opts.ignore) {
+		std::ifstream file(opts.ignore);
+		if (file.is_open()) {
+			std::string line;
+			while (std::getline(file, line)) {
+				ignorevec.push_back(line);
+			}
+			file.close();
+		}
+		else {
+			pr_out("Failed to open file %s\n", opts.ignore);
+		}
+	}
+	ignorevec_initialized = true;
+}
+
+static bool is_ignored(const std::string &report)
+{
+	lazyinit_ignorevec();
+	return std::any_of(ignorevec.begin(), ignorevec.end(), [&report](const std::string& s)
+			   { return report.find(s) != std::string::npos; });
+}
 
 // record_backtrace() is defined in stacktrace.h as an inline function.
 void __record_backtrace(size_t size, void *addr, stack_trace_t &stack_trace, int nptrs)
@@ -89,7 +120,7 @@ void release_backtrace(void *addr)
 	addrmap.erase(addrit);
 }
 
-static void print_backtrace_symbol(int count, void *addr)
+static void get_backtrace_string(int count, void *addr, std::stringstream &ss_bt)
 {
 	Dl_info dlip;
 	char *symbol;
@@ -98,15 +129,12 @@ static void print_backtrace_symbol(int count, void *addr)
 	int dl_ret;
 	int len = SYMBOL_MAXLEN;
 
-#if __SIZEOF_LONG__ == 4
-	pr_out("%2d [%#10lx] ", count, (unsigned long)addr);
-#else
-	pr_out("%2d [%#14lx] ", count, (unsigned long)addr);
-#endif
+	ss_bt << std::dec << count << " [0x" << std::hex <<
+		std::setw(4 + __SIZEOF_LONG__) << (unsigned long)addr << "] ";
 	// dladdr() translates address to symbolic info.
 	dl_ret = dladdr(addr, &dlip);
 	if (dl_ret == 0) {
-		pr_out("?\n");
+		ss_bt << "?\n";
 		return;
 	}
 
@@ -123,14 +151,15 @@ static void print_backtrace_symbol(int count, void *addr)
 		}
 		offset = static_cast<int>(static_cast<int *>(addr) -
 					  static_cast<int *>(dlip.dli_saddr));
-		pr_out("%s +%#x ", symbol, offset);
+		ss_bt << symbol << " +0x" << offset << " ";
 		free(symbol);
 	}
 	offset = (int)((char *)addr - (char *)(dlip.dli_fbase));
-	pr_out("(%s +%#x)\n", dlip.dli_fname, offset);
+	ss_bt << "(" << dlip.dli_fname << " +0x" << offset << ")\n";
 }
 
-static void print_backtrace_symbol_flamegraph(void *addr, const char *semicolon)
+static void get_backtrace_string_flamegraph(void *addr, const char *semicolon,
+					    std::stringstream &ss_bt)
 {
 	Dl_info dlip;
 	char *symbol;
@@ -156,11 +185,11 @@ static void print_backtrace_symbol_flamegraph(void *addr, const char *semicolon)
 		}
 		offset = static_cast<int>(static_cast<int *>(addr) -
 					  static_cast<int *>(dlip.dli_saddr));
-		pr_out("%s%s+%#x", semicolon, symbol, offset);
+		ss_bt << semicolon << symbol << "+0x" << offset;
 		free(symbol);
 	}
 	else {
-		pr_out("%s%s+%p", semicolon, dlip.dli_fname, addr);
+		ss_bt << semicolon << dlip.dli_fname << addr;
 	}
 }
 
@@ -281,27 +310,34 @@ print_dump_stackmap_footer(const std::vector<std::pair<stack_trace_t, stack_info
 static void print_dump_stackmap(std::vector<std::pair<stack_trace_t, stack_info_t>> &sorted_stack)
 {
 	const time_point_t current = std::chrono::steady_clock::now();
-	int cnt = 0;
+	int cnt = 1;
+	int top = opts.top;
+	int i = 0;
 
 	size_t stack_size = sorted_stack.size();
-	for (int i = 0; i < stack_size; i++) {
+	while (i < stack_size && i < top) {
 		const stack_info_t &info = sorted_stack[i].second;
-
-		if (i >= opts.top)
-			break;
-
 		const stack_trace_t &stack_trace = sorted_stack[i].first;
 		std::string age = get_delta_time_unit(current - info.birth_time);
+		std::stringstream ss_intro;
+		std::stringstream ss_bt;
 
-		pr_out("=== backtrace #%d === [count/peak: %zd/%zd] "
-		       "[size/peak: %s/%s] [age: %s]\n",
-		       ++cnt, info.count, info.peak_count, get_byte_unit(info.total_size).c_str(),
-		       get_byte_unit(info.peak_total_size).c_str(), age.c_str());
-
+		ss_intro << "=== backtrace #" << cnt << " === [count/peak: " << info.count << "/"
+			 << info.peak_count << "] "
+			 << "[size/peak: " << get_byte_unit(info.total_size) << "/"
+			 << get_byte_unit(info.peak_total_size) << "] [age: " << age << "]\n";
+		ss_bt << std::setfill('0');
 		for (int j = 0; j < info.stack_depth; j++)
-			print_backtrace_symbol(j, stack_trace[j]);
+			get_backtrace_string(j, stack_trace[j], ss_bt);
 
-		pr_out("\n");
+		if (is_ignored(ss_bt.str())) {
+			++top;
+		}
+		else {
+			pr_out("%s%s\n", ss_intro.str().c_str(), ss_bt.str().c_str());
+			++cnt;
+		}
+		++i;
 	}
 }
 
@@ -309,22 +345,30 @@ static void
 print_dump_stackmap_flamegraph(std::vector<std::pair<stack_trace_t, stack_info_t>> &sorted_stack)
 {
 	size_t stack_size = sorted_stack.size();
-	for (int i = 0; i < stack_size; i++) {
+	int i = 0;
+	int top = opts.top;
+
+	while (i < stack_size && i < top) {
 		const stack_info_t &info = sorted_stack[i].second;
 		uint64_t size = info.total_size;
 		const char *semicolon = "";
-
-		if (i >= opts.top)
-			break;
-
 		const stack_trace_t &stack_trace = sorted_stack[i].first;
+		std::stringstream ss_bt;
 
+		ss_bt << std::hex;
 		for (size_t j = 0; j < info.stack_depth; ++j) {
-			print_backtrace_symbol_flamegraph(stack_trace[info.stack_depth - 1 - j],
-							  semicolon);
+			get_backtrace_string_flamegraph(stack_trace[info.stack_depth - 1 - j],
+							semicolon, ss_bt);
 			semicolon = ";";
 		}
-		pr_out(" %" PRIu64 "\n", size);
+		if (is_ignored(ss_bt.str())) {
+			++top;
+		}
+		else {
+			pr_out("%s", ss_bt.str().c_str());
+			pr_out(" %" PRIu64 "\n", size);
+		}
+		++i;
 	}
 
 	fflush(outfp);
