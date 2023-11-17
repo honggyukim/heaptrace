@@ -40,3 +40,13 @@ void sighandler_init(void)
 	register_sighandler(&sigusr2_handler, SIGUSR2);
 	register_sighandler(&sigquit_handler, SIGQUIT);
 }
+
+void size_sighandler(int /*unused*/)
+{
+	dump_stackmap("size", opts.flamegraph);
+}
+
+void count_sighandler(int /*unused*/)
+{
+	dump_stackmap("count", opts.flamegraph);
+}

@@ -7,5 +7,7 @@
 
 void register_sighandler(sighandler_t handler, int signo);
 void sighandler_init(void);
+void size_sighandler(int);
+void count_sighandler(int);
 
 #endif /* HEAPTOP_SIGHANDLER_H */

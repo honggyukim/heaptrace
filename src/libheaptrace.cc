@@ -6,8 +6,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
 #include <csignal>
+
 #include <dlfcn.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -108,6 +108,35 @@ __constructor static void heaptrace_init()
 
 	if (!opts.flamegraph) {
 		pr_out("[heaptrace] initialized for /proc/%d/maps (%s)\n", pid, comm.c_str());
+	}
+
+	opts.signals = getenv("HEAPTRACE_SIGNALS");
+	if (opts.signals) {
+		auto key_num_vec = utils::string_split(opts.signals, ',');
+		for (const auto& key_num: key_num_vec) {
+			auto item_vec = utils::string_split(key_num, ':');
+			if (item_vec.size() != 2) {
+				pr_out("Failed to parsing signals: %s\n",
+				       key_num.c_str());
+				break;
+			}
+			std::string::size_type sz;
+			auto signo = std::stoi(item_vec[1], &sz, 10);
+			if (sz != item_vec[1].size()) {
+				pr_out("Failed to convert signo %s to number\n",
+				       item_vec[1].c_str());
+				break;
+			}
+			std::string key = item_vec[0];
+			if (key == "size") {
+				register_sighandler(size_sighandler, signo);
+			} else if (key == "count") {
+				register_sighandler(count_sighandler, signo);
+			} else {
+				pr_out("Cannot register not supporting key: %s\n",
+				       key.c_str());
+			}
+		}
 	}
 
 	initialized = true;
