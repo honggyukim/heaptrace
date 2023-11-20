@@ -26,6 +26,7 @@ enum options {
 	OPT_sort,
 	OPT_flamegraph,
 	OPT_outfile,
+	OPT_signals,
 };
 
 static struct argp_option heaptrace_options[] = {
@@ -34,6 +35,7 @@ static struct argp_option heaptrace_options[] = {
 	{ "sort", 's', "KEYs", 0, "Sort backtraces based on KEYs (size or count)" },
 	{ "flame-graph", OPT_flamegraph, nullptr, 0, "Print heap trace info in flamegraph format" },
 	{ "outfile", OPT_outfile, "FILE", 0, "Save log messages to this file" },
+	{ "signals", OPT_signals, "KEY:NUM", 0, "Add report signal numbers for given each key" },
 	{ nullptr }
 };
 
@@ -60,6 +62,10 @@ static error_t parse_option(int key, char *arg, struct argp_state *state)
 
 	case OPT_outfile:
 		opts->outfile = arg;
+		break;
+
+	case OPT_signals:
+		opts->signals = arg;
 		break;
 
 	case ARGP_KEY_ARG:
@@ -136,6 +142,9 @@ static void setup_child_environ(struct opts *opts, int argc, char *argv[])
 
 	if (opts->outfile)
 		setenv("HEAPTRACE_OUTFILE", opts->outfile, 1);
+
+	if (opts->signals)
+		setenv("HEAPTRACE_SIGNALS", opts->signals, 1);
 }
 
 int main(int argc, char *argv[])
