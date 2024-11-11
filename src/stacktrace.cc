@@ -26,6 +26,10 @@
 
 #define SYMBOL_MAXLEN 128
 
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33)
+#define GLIBC_233_OR_LATER
+#endif
+
 std::map<stack_trace_t, stack_info_t> stackmap;
 std::map<addr_t, object_info_t> addrmap;
 
@@ -255,8 +259,17 @@ static void print_dump_stackmap_header(const char *sort_key)
 static void
 print_dump_stackmap_footer(const std::vector<std::pair<stack_trace_t, stack_info_t>> &sorted_stack)
 {
-	// get allocated size info from the allocator
+	/*
+	 * Get allocated size information from the allocator. mallinfo() is
+	 * deprecated because it uses int for variables, which can only support
+	 * memory sizes less than 4GB. Therefore, use mallinfo() only in
+	 * environments with old glibc versions less than 2.33
+	 */
+#ifdef GLIBC_233_OR_LATER
+	struct mallinfo2 minfo = mallinfo2();
+#else
 	struct mallinfo minfo = mallinfo();
+#endif
 
 	uint64_t total_size = 0;
 	size_t stack_size = sorted_stack.size();
