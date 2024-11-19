@@ -42,6 +42,7 @@ struct opts {
 	const char *sort_keys;
 	bool flamegraph;
 	char *outfile;
+	char *signals;
 };
 
 extern opts opts;
