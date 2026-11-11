@@ -36,6 +36,9 @@ else
 endif
 
 LIB_CXXFLAGS := $(COMMON_CXXFLAGS) -fPIC -fno-omit-frame-pointer -fvisibility=hidden
+# backtrace() needs unwind tables to walk through the hook functions.
+# Some architectures such as 32-bit arm do not generate them by default.
+LIB_CXXFLAGS += -funwind-tables
 LIB_LDFLAGS  := $(LDFLAGS) -ldl
 
 ifndef $(DEPTH)
