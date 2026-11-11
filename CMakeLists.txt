@@ -17,5 +17,8 @@ add_compile_definitions(DEPTH=${DEPTH})
 add_library(libheaptrace SHARED src/libheaptrace.cc src/stacktrace.cc
                                 src/sighandler.cc src/utils.cc)
 set_property(TARGET libheaptrace PROPERTY OUTPUT_NAME heaptrace)
+# backtrace() needs unwind tables to walk through the hook functions. Some
+# architectures such as 32-bit arm do not generate them by default.
+target_compile_options(libheaptrace PRIVATE "-funwind-tables")
 
 add_executable(heaptrace src/heaptrace.cc)
